@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"csm-logcollector/csm"
+	utils "csm-logcollector/utils"
+	"fmt"
 	"strings"
-	 utils "csm-logcollector/utils"
 )
 
 var logger = utils.GetLogger()
@@ -12,23 +12,24 @@ var logger = utils.GetLogger()
 func main() {
 	logger.Info("Log started for csm-logcollector")
 	fmt.Println("\n\n\tCSM Logging Tool!")
-	fmt.Println("\t=================\n\n")
+	fmt.Println("\t=================")
+	fmt.Println()
 	fmt.Println("Enter the namespace: ")
 	var namespace string
-	var optional_flag string
+	var optionalFlag string
 	var p csm.StorageNameSpace
 
 	fmt.Scanln(&namespace)
 	temp := strings.ToLower(namespace)
 
 	fmt.Println("Specify optional logs needs to be collected(true):")
-	fmt.Scanln(&optional_flag)
+	fmt.Scanln(&optionalFlag)
 
-	if optional_flag != "true" {
-		fmt.Println("optional_flag is set to true by default.")
+	if optionalFlag != "true" {
+		fmt.Println("optionalFlag is set to true by default.")
 	}
 
-	optional_flag = "true"
+	optionalFlag = "true"
 
 	if strings.Contains(temp, "isilon") || strings.Contains(temp, "powerscale") {
 		p = csm.PowerScaleStruct{}
@@ -41,7 +42,7 @@ func main() {
 	} else if strings.Contains(temp, "vxflexos") || strings.Contains(temp, "powerflex") {
 		p = csm.PowerFlexStruct{}
 	}
-	
-	p.GetLogs(namespace, optional_flag)
+
+	p.GetLogs(namespace, optionalFlag)
 
 }

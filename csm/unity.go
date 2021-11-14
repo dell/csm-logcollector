@@ -1,25 +1,27 @@
 package csm
 
 import (
+	"bytes"
+	"context"
+	utils "csm-logcollector/utils"
 	"fmt"
-	 "context"
-	 "bytes"
-	 "io"
-	 "time"
-	 corev1 "k8s.io/api/core/v1"
-	 metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	 describe "k8s.io/kubectl/pkg/describe"
-	 utils "csm-logcollector/utils"
+	"io"
+	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	describe "k8s.io/kubectl/pkg/describe"
 )
 
 // Logging object
 var unityLog = utils.GetLogger()
 
+// UnityStruct for Unity platform
 type UnityStruct struct {
 	StorageNameSpaceStruct
 }
 
-func runningpods_unity(namespaceDirectoryName string, pod *corev1.Pod) {
+func runningpodsUnity(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -48,7 +50,7 @@ func runningpods_unity(namespaceDirectoryName string, pod *corev1.Pod) {
 				fmt.Printf("Error in copy information from podLogs to buf: %s", err.Error())
 			}
 			str := buf.String()
-			
+
 			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
 			captureLOG(containerDirectoryName, filename, str)
 		}
@@ -71,14 +73,14 @@ func runningpods_unity(namespaceDirectoryName string, pod *corev1.Pod) {
 			fmt.Printf("Error in copy information from podLogs to buf: %s", err.Error())
 		}
 		str := buf.String()
-		
+
 		filename := pod.Name + ".txt"
 		captureLOG(containerDirectoryName, filename, str)
 		fmt.Println()
 	}
 }
 
-func nonrunningpods_unity(namespaceDirectoryName string, pod *corev1.Pod) {
+func nonrunningpodsUnity(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -101,14 +103,15 @@ func nonrunningpods_unity(namespaceDirectoryName string, pod *corev1.Pod) {
 		containerDirectoryName := createDirectory(dirName)
 		var str string
 		str = "Pod status: not running"
-		
+
 		filename := pod.Name + ".txt"
 		captureLOG(containerDirectoryName, filename, str)
 		fmt.Println()
 	}
 }
 
-func (p UnityStruct ) GetLogs(namespace string, optional_flag string) {
+// GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
+func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 	clientset := GetClientSetFromConfig()
 	fmt.Println("\n*******************************************************************************")
 	p.GetNodes()
@@ -130,29 +133,28 @@ func (p UnityStruct ) GetLogs(namespace string, optional_flag string) {
 	p.GetDriverDetails(namespace)
 	p.GetLeaseDetails(namespace)
 	// access the API to get driver/sidecarpod logs of RUNNING pods
-	fmt.Printf("Optional flag: %s", optional_flag)
+	fmt.Printf("Optional flag: %s", optionalFlag)
 	fmt.Println("\n\nCollecting RUNNING POD LOGS (driver logs, sidecar logs)..........")
 
-	pod__, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		unityLog.Errorf("Getting all pods failed with error: %s", err.Error())
 		panic(err.Error())
 	}
-	for _, pod := range pod__.Items {
+	for _, pod := range podallns.Items {
 		if pod.Namespace == namespace {
 			if pod.Status.Phase == "Running" {
-				runningpods_unity(namespaceDirectoryName, &pod)
+				runningpodsUnity(namespaceDirectoryName, &pod)
 			} else {
-				nonrunningpods_unity(namespaceDirectoryName, &pod)
+				nonrunningpodsUnity(namespaceDirectoryName, &pod)
 			}
 		}
 	}
 
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
-    if errMsg != nil {
+	if errMsg != nil {
 		unityLog.Errorf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
-        panic(errMsg.Error())
-    }
+		panic(errMsg.Error())
+	}
 }
-

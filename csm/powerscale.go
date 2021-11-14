@@ -1,25 +1,27 @@
 package csm
 
 import (
+	"bytes"
+	"context"
+	utils "csm-logcollector/utils"
 	"fmt"
-	 "bytes"
-	 "context"
-	 "time"
-	 "io"
-	 corev1 "k8s.io/api/core/v1"
-	 metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	 describe "k8s.io/kubectl/pkg/describe"
-	 utils "csm-logcollector/utils"
+	"io"
+	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	describe "k8s.io/kubectl/pkg/describe"
 )
 
 // Logging object
 var pscLog = utils.GetLogger()
 
+// PowerScaleStruct for PowerScale platform
 type PowerScaleStruct struct {
 	StorageNameSpaceStruct
 }
 
-func runningpods_powerscale(namespaceDirectoryName string, pod *corev1.Pod) {
+func runningpodsPowerscale(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -48,7 +50,7 @@ func runningpods_powerscale(namespaceDirectoryName string, pod *corev1.Pod) {
 				fmt.Printf("Error in copy information from podLogs to buf: %s", err.Error())
 			}
 			str := buf.String()
-			
+
 			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
 			captureLOG(containerDirectoryName, filename, str)
 		}
@@ -71,14 +73,14 @@ func runningpods_powerscale(namespaceDirectoryName string, pod *corev1.Pod) {
 			fmt.Printf("Error in copy information from podLogs to buf: %s", err.Error())
 		}
 		str := buf.String()
-		
+
 		filename := pod.Name + ".txt"
 		captureLOG(containerDirectoryName, filename, str)
 		fmt.Println()
 	}
 }
 
-func nonrunningpods_powerscale(namespaceDirectoryName string, pod *corev1.Pod) {
+func nonrunningpodsPowerscale(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -90,8 +92,7 @@ func nonrunningpods_powerscale(namespaceDirectoryName string, pod *corev1.Pod) {
 			fmt.Println("\t", pod.Spec.Containers[container].Name)
 			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
 			containerDirectoryName := createDirectory(dirName)
-			var str string
-			str = "Pod status: not running"
+			var str string = "Pod status: not running"
 			filename := pod.Name + ".txt"
 			captureLOG(containerDirectoryName, filename, str)
 			fmt.Println()
@@ -99,16 +100,15 @@ func nonrunningpods_powerscale(namespaceDirectoryName string, pod *corev1.Pod) {
 	} else {
 		dirName = podDirectoryName + "/" + pod.Spec.Containers[0].Name
 		containerDirectoryName := createDirectory(dirName)
-		var str string
-		str = "Pod status: not running"
-		
+		var str string = "Pod status: not running"
 		filename := pod.Name + ".txt"
 		captureLOG(containerDirectoryName, filename, str)
 		fmt.Println()
 	}
 }
 
-func (p PowerScaleStruct ) GetLogs(namespace string, optional_flag string) {
+// GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
+func (p PowerScaleStruct) GetLogs(namespace string, optionalFlag string) {
 	clientset := GetClientSetFromConfig()
 	fmt.Println("\n*******************************************************************************")
 	p.GetNodes()
@@ -131,27 +131,27 @@ func (p PowerScaleStruct ) GetLogs(namespace string, optional_flag string) {
 	p.GetLeaseDetails(namespace)
 	// access the API to get driver/sidecarpod logs of RUNNING pods
 
-	fmt.Printf("Optional flag: %s", optional_flag)
+	fmt.Printf("Optional flag: %s", optionalFlag)
 	fmt.Println("\n\nCollecting RUNNING POD LOGS (driver logs, sidecar logs)..........")
 
-	pod__, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		pscLog.Errorf("Getting all pods failed with error: %s", err.Error())
 		panic(err.Error())
 	}
-	for _, pod := range pod__.Items {
+	for _, pod := range podallns.Items {
 		if pod.Namespace == namespace {
 			if pod.Status.Phase == "Running" {
-				runningpods_powerscale(namespaceDirectoryName, &pod)			
+				runningpodsPowerscale(namespaceDirectoryName, &pod)
 			} else {
-				nonrunningpods_powerscale(namespaceDirectoryName, &pod)
+				nonrunningpodsPowerscale(namespaceDirectoryName, &pod)
 			}
 		}
 	}
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
-    if errMsg != nil {
+	if errMsg != nil {
 		pscLog.Errorf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
-        panic(errMsg.Error())
-    }
+		panic(errMsg.Error())
+	}
 }

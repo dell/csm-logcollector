@@ -1,26 +1,28 @@
 package csm
 
 import (
+	"bytes"
+	"context"
+	utils "csm-logcollector/utils"
 	"fmt"
-	 "bytes"
-	 "context"
-	 "time"
-	 "io"
-	 "strings"
-	 corev1 "k8s.io/api/core/v1"
-	 metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	 describe "k8s.io/kubectl/pkg/describe"
-	 utils "csm-logcollector/utils"
+	"io"
+	"strings"
+	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	describe "k8s.io/kubectl/pkg/describe"
 )
 
 // Logging object
 var pflxLog = utils.GetLogger()
 
+// PowerFlexStruct for PowerFlex platform
 type PowerFlexStruct struct {
 	StorageNameSpaceStruct
 }
 
-func runningpods_powerflex(namespaceDirectoryName string, pod *corev1.Pod) {
+func runningpodsPowerflex(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("\tpod.Name........%s\n", pod.Name)
 	dirName = namespaceDirectoryName + "/" + pod.Name
@@ -64,7 +66,7 @@ func runningpods_powerflex(namespaceDirectoryName string, pod *corev1.Pod) {
 			}
 			str := buf.String()
 			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
-			fmt.Println("\tLOG collected in file..........\n")
+			fmt.Println("\tLOG collected in file..........")
 			captureLOG(containerDirectoryName, filename, str)
 		}
 	} else {
@@ -86,12 +88,12 @@ func runningpods_powerflex(namespaceDirectoryName string, pod *corev1.Pod) {
 		}
 		str := buf.String()
 		filename := pod.Name + ".txt"
-		fmt.Println("LOG collected in file..........\n")
+		fmt.Println("LOG collected in file..........")
 		captureLOG(containerDirectoryName, filename, str)
 	}
 }
 
-func nonrunningpods_powerflex(namespaceDirectoryName string, pod *corev1.Pod) {
+func nonrunningpodsPowerflex(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("\tpod.Name........%s\n", pod.Name)
 	dirName = namespaceDirectoryName + "/" + pod.Name
@@ -119,25 +121,23 @@ func nonrunningpods_powerflex(namespaceDirectoryName string, pod *corev1.Pod) {
 			fmt.Println("\t\t", pod.Spec.Containers[container].Name)
 			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
 			containerDirectoryName := createDirectory(dirName)
-			var str string
-			str = "Pod status: " + string(pod.Status.Phase)
+			var str string = "Pod status: " + string(pod.Status.Phase)
 			filename := pod.Name + ".txt"
-			fmt.Println("\tLOG collected in file..........\n")
+			fmt.Println("\tLOG collected in file..........")
 			captureLOG(containerDirectoryName, filename, str)
 		}
 	} else {
 		dirName = podDirectoryName + "/" + pod.Spec.Containers[0].Name
 		containerDirectoryName := createDirectory(dirName)
-		var str string
-		str = "Pod status: " + string(pod.Status.Phase)
+		var str string = "Pod status: " + string(pod.Status.Phase)
 		filename := pod.Name + ".txt"
-		fmt.Println("LOG collected in file..........\n")
+		fmt.Println("LOG collected in file..........")
 		captureLOG(containerDirectoryName, filename, str)
 	}
 }
 
-// access the API to get driver/sidecarpod logs of RUNNING pods
-func (p PowerFlexStruct ) GetLogs(namespace string, optional_flag string) {
+// GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
+func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string) {
 	clientset := GetClientSetFromConfig()
 	fmt.Println("\n*******************************************************************************")
 	p.GetNodes()
@@ -157,34 +157,34 @@ func (p PowerFlexStruct ) GetLogs(namespace string, optional_flag string) {
 	}
 
 	p.GetDriverDetails(namespace)
-	fmt.Println("\n*******************************************************************************")	
+	fmt.Println("\n*******************************************************************************")
 
-	fmt.Printf("\nOptional flag: %s", optional_flag)
+	fmt.Printf("\nOptional flag: %s", optionalFlag)
 	fmt.Println("\nCollecting Running Pod Logs (driver logs, sidecar logs)")
 
-	pod__, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		pflxLog.Errorf("Getting all pods failed with error: %s", err.Error())
 		panic(err.Error())
 	}
-	for _, pod := range pod__.Items {
+	for _, pod := range podallns.Items {
 		if pod.Namespace == namespace {
 			if pod.Status.Phase == "Running" {
-				runningpods_powerflex(namespaceDirectoryName, &pod)
+				runningpodsPowerflex(namespaceDirectoryName, &pod)
 				fmt.Println("\t*************************************************************")
 				pflxLog.Infof("Logs collected for runningpods of %s", namespace)
 			} else {
-				nonrunningpods_powerflex(namespaceDirectoryName, &pod)
+				nonrunningpodsPowerflex(namespaceDirectoryName, &pod)
 				fmt.Println("\t*************************************************************")
 				pflxLog.Infof("Logs collected for non-runningpods of %s", namespace)
 			}
 		}
 	}
-	
+
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
-    if errMsg != nil {
+	if errMsg != nil {
 		pflxLog.Errorf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
-        panic(errMsg.Error())
-    }
+		panic(errMsg.Error())
+	}
 }

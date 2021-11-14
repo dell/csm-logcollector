@@ -1,28 +1,30 @@
 package csm
 
 import (
-	"context"
-	"flag"
-	"fmt"
-	"path/filepath"
 	"archive/tar"
 	"bufio"
-	"os"
+	"context"
+	utils "csm-logcollector/utils"
+	"flag"
+	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+
+	coordinationv1 "k8s.io/api/coordination/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	describe "k8s.io/kubectl/pkg/describe"
-	coordinationv1 "k8s.io/api/coordination/v1"
-	utils "csm-logcollector/utils"
 )
 
 // Logging object
 var snsLog = utils.GetLogger()
 
+// StorageNameSpace interface declares log collection methods
 type StorageNameSpace interface {
 	GetNodes() []string
 	GetNamespaces() []string
@@ -31,21 +33,23 @@ type StorageNameSpace interface {
 	GetDriverDetails(string)
 	GetLeaseDetails(string)
 	DescribePods(string, string, describe.DescriberSettings, string)
-	ValidateNamespace([] string, string)
+	ValidateNamespace([]string, string)
 }
 
+// StorageNameSpaceStruct structure declares CSI driver fields
 type StorageNameSpaceStruct struct {
-	namespace_name string
-	drivername string
+	namespaceName string
+	drivername    string
 	driverversion string
 }
 
 var clientset *kubernetes.Clientset
 var once sync.Once
 
+// SetClientSetFromConfig creates ClientSet object
 func SetClientSetFromConfig() *kubernetes.Clientset {
 	once.Do(func() {
-        if clientset == nil {
+		if clientset == nil {
 			var kubeconfig *string
 			if home := homedir.HomeDir(); home != "" {
 				kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -53,28 +57,30 @@ func SetClientSetFromConfig() *kubernetes.Clientset {
 				kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 			}
 			flag.Parse()
-	
+
 			config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 			if err != nil {
 				snsLog.Errorf("Error while building config object: %s", err.Error())
 				panic(err.Error())
 			}
-	
+
 			clientset, err = kubernetes.NewForConfig(config)
 			if err != nil {
 				snsLog.Errorf("Error while building clientset object: %s", err.Error())
 				panic(err.Error())
 			}
 		}
-    })
+	})
 	return clientset
 }
 
+// GetClientSetFromConfig returns ClientSet object
 func GetClientSetFromConfig() *kubernetes.Clientset {
 	return SetClientSetFromConfig()
 }
 
-func (_ StorageNameSpaceStruct ) GetNodes() []string{
+// GetNodes returns the array of nodes in the Kubernetes cluster
+func (_ StorageNameSpaceStruct) GetNodes() []string {
 	// access the API to list Nodes
 	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -85,33 +91,35 @@ func (_ StorageNameSpaceStruct ) GetNodes() []string{
 	fmt.Println("=====================")
 	length := len(nodes.Items)
 	nodearray := make([]string, length)
-	for i:=0; i < len(nodes.Items); i++ {
+	for i := 0; i < len(nodes.Items); i++ {
 		nodearray[i] = nodes.Items[i].Name
-    }
+	}
 	fmt.Println(nodearray)
 	snsLog.Debugf("Cluster nodes listed: %s", nodearray)
 	return nodearray
 }
 
-func (_ StorageNameSpaceStruct ) ValidateNamespace(ns []string, namespace string){
+// ValidateNamespace validates if given namespace exists in the Kubernetes cluster
+func (_ StorageNameSpaceStruct) ValidateNamespace(ns []string, namespace string) {
 	var result bool = false
-    for _, x := range ns {
-        if x == namespace {
-            result = true
-            break
-        }
-    }
- 
-    if result {
+	for _, x := range ns {
+		if x == namespace {
+			result = true
+			break
+		}
+	}
+
+	if result {
 		snsLog.Infof("Given Namespace is available in the given environment")
-        fmt.Println("Given Namespace is available in the given environment")
-    } else {
+		fmt.Println("Given Namespace is available in the given environment")
+	} else {
 		snsLog.Errorf("Given Namespace is not available in the given environment.")
-        panic("Given Namespace is not available in the given environment.")
-    }
+		panic("Given Namespace is not available in the given environment.")
+	}
 }
 
-func (_ StorageNameSpaceStruct ) GetNamespaces() []string{
+// GetNamespaces returns the array of namespaces in the Kubernetes cluster
+func (_ StorageNameSpaceStruct) GetNamespaces() []string {
 
 	// access the API to list Namespaces
 	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
@@ -122,18 +130,19 @@ func (_ StorageNameSpaceStruct ) GetNamespaces() []string{
 	fmt.Printf("\nThere are %d namespaces in the cluster\n", len(namespaces.Items))
 	fmt.Println("List of cluster namespaces:")
 	fmt.Println("==========================")
-	
+
 	length := len(namespaces.Items)
 	nsarray := make([]string, length)
-	for i:=0; i < len(namespaces.Items); i++ {
+	for i := 0; i < len(namespaces.Items); i++ {
 		nsarray[i] = namespaces.Items[i].Name
-    }
+	}
 	fmt.Println(nsarray)
 	snsLog.Debugf("Cluster namespaces listed: %s", nsarray)
 	return nsarray
 }
 
-func (_ StorageNameSpaceStruct ) GetPods(namespace string) []string{
+// GetPods returns the array of pods in the given namespace
+func (_ StorageNameSpaceStruct) GetPods(namespace string) []string {
 	// access the API to list Pods of a particular namespace
 	fmt.Printf("\n\nList of pods for %s..............\n", namespace)
 	fmt.Println("======================================")
@@ -142,17 +151,18 @@ func (_ StorageNameSpaceStruct ) GetPods(namespace string) []string{
 		snsLog.Errorf("Getting pods in namespace %s failed with error: %s", namespace, err.Error())
 		panic(err.Error())
 	}
-	
+
 	length := len(podList.Items)
 	podarray := make([]string, length)
-	for i:=0; i < len(podList.Items); i++ {
+	for i := 0; i < len(podList.Items); i++ {
 		podarray[i] = podList.Items[i].Name
-    }
+	}
 	fmt.Println(podarray)
-    snsLog.Debugf("Pods in namespace %s listed: %s", namespace, podarray)
-    return podarray
+	snsLog.Debugf("Pods in namespace %s listed: %s", namespace, podarray)
+	return podarray
 }
 
+// GetDriverDetails populates the CSI driver fields
 func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) {
 	// Get CSI driver info for a particular namespace
 	fmt.Println("\n\nDRIVER INFO..............")
@@ -179,39 +189,41 @@ func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) {
 		}
 	}
 
-	p.namespace_name = namespace
+	p.namespaceName = namespace
 	p.drivername = driverName
 	p.driverversion = driverVersion
-	fmt.Printf("\tNamespace: \t%s\n", p.namespace_name)
+	fmt.Printf("\tNamespace: \t%s\n", p.namespaceName)
 	fmt.Printf("\tDriver name: \t%s\n", p.drivername)
 	fmt.Printf("\tDriver version: %s\n", p.driverversion)
-	snsLog.Debugf("Driver detailes listed: %s, %s, %s", p.namespace_name, p.drivername, p.driverversion)
+	snsLog.Debugf("Driver detailes listed: %s, %s, %s", p.namespaceName, p.drivername, p.driverversion)
 }
 
-func (_ StorageNameSpaceStruct ) GetLeaseDetails(namespace string) {
+// GetLeaseDetails gets the lease details
+func (_ StorageNameSpaceStruct) GetLeaseDetails(namespace string) {
 	// kubectl get leases -n <namespace>
-    fmt.Printf("\n\nLease pod for %s..............\n", namespace)
-    fmt.Println("=====================================\n")
-    _ = &coordinationv1.Lease{}
-    leasePodList, err := clientset.CoordinationV1().Leases(namespace).List(context.TODO(), metav1.ListOptions{})
-    if err != nil {
+	fmt.Printf("\n\nLease pod for %s..............\n", namespace)
+	fmt.Println("=====================================")
+	_ = &coordinationv1.Lease{}
+	leasePodList, err := clientset.CoordinationV1().Leases(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
 		snsLog.Errorf("Getting lease details in namespace %s failed with error: %s", namespace, err.Error())
-        panic(err.Error())
-    }
-	
+		panic(err.Error())
+	}
+
 	leasepod := "driver-csi-" + namespace + "-dellemc-com"
-    for _, lease := range leasePodList.Items {
+	for _, lease := range leasePodList.Items {
 		if strings.Contains(lease.Name, leasepod) {
-        	fmt.Printf("\t%s\n", lease.Name)
-        	fmt.Printf("\t%s\n", lease.Namespace)
-        	fmt.Printf("\t%s\n", *lease.Spec.HolderIdentity)      // Points to same controller pod for all instances
+			fmt.Printf("\t%s\n", lease.Name)
+			fmt.Printf("\t%s\n", lease.Namespace)
+			fmt.Printf("\t%s\n", *lease.Spec.HolderIdentity) // Points to same controller pod for all instances
 			snsLog.Debugf("Lease pod detailes: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
-        	fmt.Println()
+			fmt.Println()
 		}
-    }
+	}
 }
 
-func (_ StorageNameSpaceStruct ) GetLogs(namespace string, optional_flag string) {
+// GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
+func (_ StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string) {
 }
 
 func createDirectory(name string) (dirName string) {
@@ -227,7 +239,8 @@ func createDirectory(name string) (dirName string) {
 	return name
 }
 
-func (_ StorageNameSpaceStruct ) DescribePods(namespace string, podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
+// DescribePods describes the pods in the given namespace
+func (_ StorageNameSpaceStruct) DescribePods(namespace string, podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
 	d := describe.PodDescriber{clientset}
 	DescribePodDetails, err := d.Describe(namespace, podName, describerSettings)
 	if err != nil {
@@ -256,61 +269,61 @@ func createTarball(source string, target string) error {
 	// add the logs.txt file to source directory file
 	copy("logs.txt", source)
 	target = filepath.Join(target, fmt.Sprintf("%s.tar.gz", filename))
-    tarfile, err := os.Create(target)
-    if err != nil {
+	tarfile, err := os.Create(target)
+	if err != nil {
 		snsLog.Errorf("Creating file %s failed with error: %s", target, err.Error())
-        return err
-    }
-    defer tarfile.Close()
- 
-    tarball := tar.NewWriter(tarfile)
-    defer tarball.Close()
- 
-    info, err := os.Stat(source)
-    if err != nil {
+		return err
+	}
+	defer tarfile.Close()
+
+	tarball := tar.NewWriter(tarfile)
+	defer tarball.Close()
+
+	info, err := os.Stat(source)
+	if err != nil {
 		snsLog.Errorf("Getting info for file %s failed with error: %s", source, err.Error())
-        return err
-    }
- 
-    var baseDir string
-    if info.IsDir() {
-        baseDir = filepath.Base(source)
-    }
- 
-    errMsgWalk := filepath.Walk(source,
-        func(path string, info os.FileInfo, err error) error {
-            if err != nil {
+		return err
+	}
+
+	var baseDir string
+	if info.IsDir() {
+		baseDir = filepath.Base(source)
+	}
+
+	errMsgWalk := filepath.Walk(source,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
 				snsLog.Errorf("Creating fileinfo object failed with error: %s", err.Error())
-                return err
-            }
-            header, err := tar.FileInfoHeader(info, info.Name())
-            if err != nil {
+				return err
+			}
+			header, err := tar.FileInfoHeader(info, info.Name())
+			if err != nil {
 				snsLog.Errorf("Creating header object failed with error: %s", err.Error())
-                return err
-            }
- 
-            if baseDir != "" {
-                header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
-            }
- 
-            if err := tarball.WriteHeader(header); err != nil {
+				return err
+			}
+
+			if baseDir != "" {
+				header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
+			}
+
+			if err := tarball.WriteHeader(header); err != nil {
 				snsLog.Errorf("Writing header object failed with error: %s", err.Error())
-                return err
-            }
- 
-            if info.IsDir() {
-                return nil
-            }
- 
-            file, err := os.Open(path)
-            if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			file, err := os.Open(path)
+			if err != nil {
 				snsLog.Errorf("Opening file %s failed with error: %s", path, err.Error())
-                return err
-            }
-            defer file.Close()
-            _, err = io.Copy(tarball, file)
-            return err
-        })
+				return err
+			}
+			defer file.Close()
+			_, err = io.Copy(tarball, file)
+			return err
+		})
 	if errMsgWalk != nil {
 		snsLog.Errorf("Walking the directory %s failed with error: %s", source, errMsgWalk.Error())
 		return errMsgWalk
