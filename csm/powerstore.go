@@ -24,16 +24,16 @@ type PowerStoreStruct struct {
 }
 
 // GetLeaseDetails collects lease details
-func (p PowerStoreStruct) GetLeaseDetails(namespace string) {
-	fmt.Printf("\n\nLease pod for %s..............\n", namespace)
+func (p PowerStoreStruct) GetLeaseDetails() {
+	fmt.Printf("\n\nLease pod for %s..............\n", p.namespaceName)
 	fmt.Println("=====================================")
 	_ = &coordinationv1.Lease{}
-	leasePodList, err := clientset.CoordinationV1().Leases(namespace).List(context.TODO(), metav1.ListOptions{})
+	leasePodList, err := clientset.CoordinationV1().Leases(p.namespaceName).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		psLog.Errorf("Getting lease details in namespace %s failed with error: %s", namespace, err.Error())
+		psLog.Errorf("Getting lease details in namespace %s failed with error: %s", p.namespaceName, err.Error())
 		panic(err.Error())
 	}
-	leasepod := "external-attacher-leader-" + namespace + "-dellemc-com"
+	leasepod := "external-attacher-leader-" + p.namespaceName + "-dellemc-com"
 
 	for _, lease := range leasePodList.Items {
 		if strings.Contains(lease.Name, leasepod) {
@@ -136,11 +136,12 @@ func nonrunningpodsPowerstore(namespaceDirectoryName string, pod *corev1.Pod) {
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
 func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 	clientset := GetClientSetFromConfig()
+	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
-	p.GetNodes()
-	nsarray := p.GetNamespaces()
-	p.ValidateNamespace(nsarray, namespace)
-	podarray := p.GetPods(namespace)
+	GetNodes()
+	nsarray := GetNamespaces()
+	p.ValidateNamespace(nsarray)
+	podarray := p.GetPods()
 
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
@@ -150,11 +151,10 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 	for i := 0; i < len(podarray); i++ {
 		dirName = namespaceDirectoryName + "/" + podarray[i]
 		podDirectoryName := createDirectory(dirName)
-		p.DescribePods(namespace, podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
+		p.DescribePods(podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 	}
 
-	p.GetDriverDetails(namespace)
-	p.GetLeaseDetails(namespace)
+	p.GetLeaseDetails()
 	// access the API to get driver/sidecarpod logs of RUNNING pods
 
 	fmt.Printf("Optional flag: %s\n", optionalFlag)

@@ -26,14 +26,12 @@ var snsLog = utils.GetLogger()
 
 // StorageNameSpace interface declares log collection methods
 type StorageNameSpace interface {
-	GetNodes() []string
-	GetNamespaces() []string
 	GetLogs(string, string)
-	GetPods(string) []string
-	GetDriverDetails(string)
-	GetLeaseDetails(string)
-	DescribePods(string, string, describe.DescriberSettings, string)
-	ValidateNamespace([]string, string)
+	GetPods() []string
+	GetDriverDetails(string) (string, string, string)
+	GetLeaseDetails()
+	DescribePods(string, describe.DescriberSettings, string)
+	ValidateNamespace([]string)
 }
 
 // StorageNameSpaceStruct structure declares CSI driver fields
@@ -80,8 +78,9 @@ func GetClientSetFromConfig() *kubernetes.Clientset {
 }
 
 // GetNodes returns the array of nodes in the Kubernetes cluster
-func (_ StorageNameSpaceStruct) GetNodes() []string {
+func GetNodes() []string {
 	// access the API to list Nodes
+	// clientset := GetClientSetFromConfig()
 	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Errorf("Error while getting nodes: %s", err.Error())
@@ -100,10 +99,11 @@ func (_ StorageNameSpaceStruct) GetNodes() []string {
 }
 
 // ValidateNamespace validates if given namespace exists in the Kubernetes cluster
-func (_ StorageNameSpaceStruct) ValidateNamespace(ns []string, namespace string) {
+func (s StorageNameSpaceStruct) ValidateNamespace(ns []string) {
+	fmt.Printf("************ %s\n", s.namespaceName)
 	var result bool = false
 	for _, x := range ns {
-		if x == namespace {
+		if x == s.namespaceName {
 			result = true
 			break
 		}
@@ -119,9 +119,9 @@ func (_ StorageNameSpaceStruct) ValidateNamespace(ns []string, namespace string)
 }
 
 // GetNamespaces returns the array of namespaces in the Kubernetes cluster
-func (_ StorageNameSpaceStruct) GetNamespaces() []string {
-
+func GetNamespaces() []string {
 	// access the API to list Namespaces
+	// clientset := GetClientSetFromConfig()
 	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Errorf("Error while getting namespaces: %s", err.Error())
@@ -142,13 +142,14 @@ func (_ StorageNameSpaceStruct) GetNamespaces() []string {
 }
 
 // GetPods returns the array of pods in the given namespace
-func (_ StorageNameSpaceStruct) GetPods(namespace string) []string {
+func (s StorageNameSpaceStruct) GetPods() []string {
 	// access the API to list Pods of a particular namespace
-	fmt.Printf("\n\nList of pods for %s..............\n", namespace)
+	clientset := GetClientSetFromConfig()
+	fmt.Printf("\n\nList of pods for %s..............\n", s.namespaceName)
 	fmt.Println("======================================")
-	podList, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	podList, err := clientset.CoreV1().Pods(s.namespaceName).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		snsLog.Errorf("Getting pods in namespace %s failed with error: %s", namespace, err.Error())
+		snsLog.Errorf("Getting pods in namespace %s failed with error: %s", s.namespaceName, err.Error())
 		panic(err.Error())
 	}
 
@@ -158,13 +159,14 @@ func (_ StorageNameSpaceStruct) GetPods(namespace string) []string {
 		podarray[i] = podList.Items[i].Name
 	}
 	fmt.Println(podarray)
-	snsLog.Debugf("Pods in namespace %s listed: %s", namespace, podarray)
+	snsLog.Debugf("Pods in namespace %s listed: %s", s.namespaceName, podarray)
 	return podarray
 }
 
 // GetDriverDetails populates the CSI driver fields
-func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) {
+func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, string, string) {
 	// Get CSI driver info for a particular namespace
+	clientset := GetClientSetFromConfig()
 	fmt.Println("\n\nDRIVER INFO..............")
 	fmt.Println("=========================")
 	podlist, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
@@ -196,21 +198,23 @@ func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) {
 	fmt.Printf("\tDriver name: \t%s\n", p.drivername)
 	fmt.Printf("\tDriver version: %s\n", p.driverversion)
 	snsLog.Debugf("Driver detailes listed: %s, %s, %s", p.namespaceName, p.drivername, p.driverversion)
+	return namespace, driverName, driverVersion
 }
 
 // GetLeaseDetails gets the lease details
-func (_ StorageNameSpaceStruct) GetLeaseDetails(namespace string) {
+func (s StorageNameSpaceStruct) GetLeaseDetails() {
 	// kubectl get leases -n <namespace>
-	fmt.Printf("\n\nLease pod for %s..............\n", namespace)
+	clientset := GetClientSetFromConfig()
+	fmt.Printf("\n\nLease pod for %s..............\n", s.namespaceName)
 	fmt.Println("=====================================")
 	_ = &coordinationv1.Lease{}
-	leasePodList, err := clientset.CoordinationV1().Leases(namespace).List(context.TODO(), metav1.ListOptions{})
+	leasePodList, err := clientset.CoordinationV1().Leases(s.namespaceName).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		snsLog.Errorf("Getting lease details in namespace %s failed with error: %s", namespace, err.Error())
+		snsLog.Errorf("Getting lease details in namespace %s failed with error: %s", s.namespaceName, err.Error())
 		panic(err.Error())
 	}
 
-	leasepod := "driver-csi-" + namespace + "-dellemc-com"
+	leasepod := "driver-csi-" + s.namespaceName + "-dellemc-com"
 	for _, lease := range leasePodList.Items {
 		if strings.Contains(lease.Name, leasepod) {
 			fmt.Printf("\t%s\n", lease.Name)
@@ -223,7 +227,7 @@ func (_ StorageNameSpaceStruct) GetLeaseDetails(namespace string) {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (_ StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string) {
+func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string) {
 }
 
 func createDirectory(name string) (dirName string) {
@@ -240,11 +244,12 @@ func createDirectory(name string) (dirName string) {
 }
 
 // DescribePods describes the pods in the given namespace
-func (_ StorageNameSpaceStruct) DescribePods(namespace string, podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
+func (s StorageNameSpaceStruct) DescribePods(podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
+	clientset := GetClientSetFromConfig()
 	d := describe.PodDescriber{clientset}
-	DescribePodDetails, err := d.Describe(namespace, podName, describerSettings)
+	DescribePodDetails, err := d.Describe(s.namespaceName, podName, describerSettings)
 	if err != nil {
-		snsLog.Errorf("Describing pod %s in namespace %s failed with error: %s", podName, namespace, err.Error())
+		snsLog.Errorf("Describing pod %s in namespace %s failed with error: %s", podName, s.namespaceName, err.Error())
 		panic(err.Error())
 	}
 	filename := podName + "-describe.txt"
@@ -368,8 +373,8 @@ func copy(src, dst string) {
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
 	if err != nil {
-		snsLog.Errorf("Copying the contents of file %s to file %s failed with error: %s", source, destination, err.Error())
+		snsLog.Errorf("Copying the contents of file failed with error: %s", err.Error())
 		snsLog.Fatal(err.Error())
 	}
-	snsLog.Debugf("logs.txt added to Dir. Copied ", nBytes, " bytes")
+	snsLog.Debugf("logs.txt added to Dir. Copied %d  bytes", nBytes)
 }

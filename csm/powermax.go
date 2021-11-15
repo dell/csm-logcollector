@@ -106,11 +106,12 @@ func nonrunningpodsPowermax(namespaceDirectoryName string, pod *corev1.Pod) {
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
 func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string) {
 	clientset := GetClientSetFromConfig()
+	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
-	p.GetNodes()
-	nsarray := p.GetNamespaces()
-	p.ValidateNamespace(nsarray, namespace)
-	podarray := p.GetPods(namespace)
+	GetNodes()
+	nsarray := GetNamespaces()
+	p.ValidateNamespace(nsarray)
+	podarray := p.GetPods()
 
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
@@ -120,11 +121,10 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string) {
 	for i := 0; i < len(podarray); i++ {
 		dirName = namespaceDirectoryName + "/" + podarray[i]
 		podDirectoryName := createDirectory(dirName)
-		p.DescribePods(namespace, podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
+		p.DescribePods(podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 	}
 
-	p.GetDriverDetails(namespace)
-	p.GetLeaseDetails(namespace)
+	p.GetLeaseDetails()
 	fmt.Println("\n*******************************************************************************")
 
 	fmt.Printf("\nOptional flag: %s", optionalFlag)

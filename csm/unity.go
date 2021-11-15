@@ -92,8 +92,7 @@ func nonrunningpodsUnity(namespaceDirectoryName string, pod *corev1.Pod) {
 			fmt.Println("\t", pod.Spec.Containers[container].Name)
 			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
 			containerDirectoryName := createDirectory(dirName)
-			var str string
-			str = "Pod status: not running"
+			var str string = "Pod status: not running"
 			filename := pod.Name + ".txt"
 			captureLOG(containerDirectoryName, filename, str)
 			fmt.Println()
@@ -101,8 +100,7 @@ func nonrunningpodsUnity(namespaceDirectoryName string, pod *corev1.Pod) {
 	} else {
 		dirName = podDirectoryName + "/" + pod.Spec.Containers[0].Name
 		containerDirectoryName := createDirectory(dirName)
-		var str string
-		str = "Pod status: not running"
+		var str string = "Pod status: not running"
 
 		filename := pod.Name + ".txt"
 		captureLOG(containerDirectoryName, filename, str)
@@ -113,11 +111,12 @@ func nonrunningpodsUnity(namespaceDirectoryName string, pod *corev1.Pod) {
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
 func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 	clientset := GetClientSetFromConfig()
+	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
-	p.GetNodes()
-	nsarray := p.GetNamespaces()
-	p.ValidateNamespace(nsarray, namespace)
-	podarray := p.GetPods(namespace)
+	GetNodes()
+	nsarray := GetNamespaces()
+	p.ValidateNamespace(nsarray)
+	podarray := p.GetPods()
 
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
@@ -127,11 +126,10 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 	for i := 0; i < len(podarray); i++ {
 		dirName = namespaceDirectoryName + "/" + podarray[i]
 		podDirectoryName := createDirectory(dirName)
-		p.DescribePods(namespace, podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
+		p.DescribePods(podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 	}
 
-	p.GetDriverDetails(namespace)
-	p.GetLeaseDetails(namespace)
+	p.GetLeaseDetails()
 	// access the API to get driver/sidecarpod logs of RUNNING pods
 	fmt.Printf("Optional flag: %s", optionalFlag)
 	fmt.Println("\n\nCollecting RUNNING POD LOGS (driver logs, sidecar logs)..........")
