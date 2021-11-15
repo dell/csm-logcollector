@@ -164,7 +164,7 @@ func (s StorageNameSpaceStruct) GetPods() []string {
 }
 
 // GetDriverDetails populates the CSI driver fields
-func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, string, string) {
+func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, string, string) {
 	// Get CSI driver info for a particular namespace
 	clientset := GetClientSetFromConfig()
 	fmt.Println("\n\nDRIVER INFO..............")
@@ -191,13 +191,13 @@ func (p StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 		}
 	}
 
-	p.namespaceName = namespace
-	p.drivername = driverName
-	p.driverversion = driverVersion
-	fmt.Printf("\tNamespace: \t%s\n", p.namespaceName)
-	fmt.Printf("\tDriver name: \t%s\n", p.drivername)
-	fmt.Printf("\tDriver version: %s\n", p.driverversion)
-	snsLog.Debugf("Driver detailes listed: %s, %s, %s", p.namespaceName, p.drivername, p.driverversion)
+	s.namespaceName = namespace
+	s.drivername = driverName
+	s.driverversion = driverVersion
+	fmt.Printf("\tNamespace: \t%s\n", s.namespaceName)
+	fmt.Printf("\tDriver name: \t%s\n", s.drivername)
+	fmt.Printf("\tDriver version: %s\n", s.driverversion)
+	snsLog.Debugf("Driver detailes listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
 	return namespace, driverName, driverVersion
 }
 
