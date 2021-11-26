@@ -1,16 +1,26 @@
+/*
+ Copyright (c) 2019 Dell Inc, or its subsidiaries.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+      http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 package csm
 
 import (
-	"bytes"
 	"context"
 	utils "csm-logcollector/utils"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	describe "k8s.io/kubectl/pkg/describe"
 )
@@ -30,8 +40,7 @@ func (p PowerStoreStruct) GetLeaseDetails() {
 	_ = &coordinationv1.Lease{}
 	leasePodList, err := clientset.CoordinationV1().Leases(p.namespaceName).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		psLog.Errorf("Getting lease details in namespace %s failed with error: %s", p.namespaceName, err.Error())
-		panic(err.Error())
+		psLog.Fatalf("Getting lease details in namespace %s failed with error: %s", p.namespaceName, err.Error())
 	}
 	leasepod := "external-attacher-leader-" + p.namespaceName + "-dellemc-com"
 
@@ -43,93 +52,6 @@ func (p PowerStoreStruct) GetLeaseDetails() {
 			psLog.Debugf("Lease pod detailes: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
 			fmt.Println()
 		}
-	}
-}
-
-func runningpodsPowerstore(namespaceDirectoryName string, pod *corev1.Pod) {
-	var dirName string
-	fmt.Printf("pod.Name........%s\n", pod.Name)
-	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
-	dirName = namespaceDirectoryName + "/" + pod.Name
-	podDirectoryName := createDirectory(dirName)
-	fmt.Printf("There are %d containers for the pod\n", len(pod.Spec.Containers))
-	if len(pod.Spec.Containers) > 1 {
-		for container := range pod.Spec.Containers {
-			fmt.Println("\t", pod.Spec.Containers[container].Name)
-			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
-			containerDirectoryName := createDirectory(dirName)
-
-			opts := corev1.PodLogOptions{}
-			opts.Container = pod.Spec.Containers[container].Name
-			req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &opts)
-			podLogs, err := req.Stream(context.TODO())
-			if err != nil {
-				psLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
-				fmt.Printf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
-			}
-			defer podLogs.Close()
-			buf := new(bytes.Buffer)
-			_, err = io.Copy(buf, podLogs)
-			if err != nil {
-				psLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
-				fmt.Printf("Error in copy information from podLogs to buf: %s", err.Error())
-			}
-			str := buf.String()
-
-			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
-			captureLOG(containerDirectoryName, filename, str)
-		}
-		fmt.Println()
-	} else {
-		dirName = podDirectoryName + "/" + pod.Spec.Containers[0].Name
-		containerDirectoryName := createDirectory(dirName)
-
-		req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{})
-		podLogs, err := req.Stream(context.TODO())
-		if err != nil {
-			psLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
-			fmt.Printf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
-		}
-		defer podLogs.Close()
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, podLogs)
-		if err != nil {
-			psLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
-			fmt.Printf("Error in copy information from podLogs to buf: %s", err.Error())
-		}
-		str := buf.String()
-
-		filename := pod.Name + ".txt"
-		captureLOG(containerDirectoryName, filename, str)
-		fmt.Println()
-	}
-}
-
-func nonrunningpodsPowerstore(namespaceDirectoryName string, pod *corev1.Pod) {
-	var dirName string
-	fmt.Printf("pod.Name........%s\n", pod.Name)
-	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
-	fmt.Printf("There are %d containers for the pod\n", len(pod.Spec.Containers))
-	dirName = namespaceDirectoryName + "/" + pod.Name
-	podDirectoryName := createDirectory(dirName)
-	if len(pod.Spec.Containers) > 1 {
-		for container := range pod.Spec.Containers {
-			fmt.Println("\t", pod.Spec.Containers[container].Name)
-			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
-			containerDirectoryName := createDirectory(dirName)
-			var str string = "Pod status: not running"
-			filename := pod.Name + ".txt"
-			captureLOG(containerDirectoryName, filename, str)
-			fmt.Println()
-		}
-	} else {
-		dirName = podDirectoryName + "/" + pod.Spec.Containers[0].Name
-		containerDirectoryName := createDirectory(dirName)
-		var str string = "Pod status: not running"
-
-		filename := pod.Name + ".txt"
-		captureLOG(containerDirectoryName, filename, str)
-		fmt.Println()
 	}
 }
 
@@ -148,10 +70,10 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 	dirName = namespace + "_" + t
 	namespaceDirectoryName := createDirectory(dirName)
 
-	for i := 0; i < len(podarray); i++ {
-		dirName = namespaceDirectoryName + "/" + podarray[i]
+	for _, pod := range podarray {
+		dirName = namespaceDirectoryName + "/" + pod
 		podDirectoryName := createDirectory(dirName)
-		p.DescribePods(podarray[i], describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
+		p.DescribePods(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 	}
 
 	p.GetLeaseDetails()
@@ -162,15 +84,16 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 
 	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		psLog.Errorf("Getting all pods failed with error: %s", err.Error())
-		panic(err.Error())
+		psLog.Fatalf("Getting all pods failed with error: %s", err.Error())
 	}
 	for _, pod := range podallns.Items {
-		if pod.Namespace == namespace {
+		if pod.Namespace != namespace {
+			continue
+		} else if pod.Namespace == namespace {
 			if pod.Status.Phase == "Running" {
-				runningpodsPowerstore(namespaceDirectoryName, &pod)
+				p.GetRunningPods(namespaceDirectoryName, &pod)
 			} else {
-				nonrunningpodsPowerstore(namespaceDirectoryName, &pod)
+				p.GetNonRunningPods(namespaceDirectoryName, &pod)
 			}
 		}
 	}
@@ -178,7 +101,6 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
-		psLog.Errorf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
-		panic(errMsg.Error())
+		psLog.Fatalf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 	}
 }
