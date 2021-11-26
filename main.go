@@ -48,7 +48,7 @@ func main() {
 		if optionalFlag == "True" || optionalFlag == "true" {
 			break
 		}
-		count -= 1
+		count--
 	}
 
 	if count == 0 {

@@ -34,7 +34,7 @@ type PowerMaxStruct struct {
 	StorageNameSpaceStruct
 }
 
-// Override GetRunningPods for PowerMax specific implementation
+// GetRunningPods is overridden for PowerMax specific implementation
 func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
@@ -68,7 +68,7 @@ func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev
 	}
 }
 
-// Override GetNonRunningPods for PowerMax specific implementation
+// GetNonRunningPods is overridden for PowerMax specific implementation
 func (p PowerMaxStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)

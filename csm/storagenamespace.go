@@ -267,6 +267,7 @@ func (s StorageNameSpaceStruct) DescribePods(podName string, describerSettings d
 	captureLOG(podDirectoryName, filename, DescribePodDetails)
 }
 
+// GetRunningPods collects log of the running pod in given namespace
 func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
@@ -302,6 +303,7 @@ func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, po
 	fmt.Println()
 }
 
+// GetNonRunningPods collects log of the nonrunning pod in given namespace
 func (s StorageNameSpaceStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)

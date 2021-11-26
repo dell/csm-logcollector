@@ -35,7 +35,7 @@ type PowerFlexStruct struct {
 	StorageNameSpaceStruct
 }
 
-// Override GetRunningPods for PowerFlex specific implementation
+// GetRunningPods is overridden for PowerFlex specific implementation
 func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
@@ -82,7 +82,7 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 	}
 }
 
-// Override GetNonRunningPods for PowerFlex specific implementation
+// GetNonRunningPods is overridden for PowerFlex specific implementation
 func (p PowerFlexStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
