@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2019 Dell Inc, or its subsidiaries.
+ Copyright (c) 2021 Dell Inc, or its subsidiaries.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -90,7 +90,7 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 		if pod.Namespace != namespace {
 			continue
 		} else if pod.Namespace == namespace {
-			if pod.Status.Phase == "Running" {
+			if pod.Status.Phase == RunningPodState {
 				p.GetRunningPods(namespaceDirectoryName, &pod)
 			} else {
 				p.GetNonRunningPods(namespaceDirectoryName, &pod)

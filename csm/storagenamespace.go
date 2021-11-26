@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2019 Dell Inc, or its subsidiaries.
+ Copyright (c) 2021 Dell Inc, or its subsidiaries.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -192,7 +192,7 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 	var driverVersion string
 	for _, pod := range podlist.Items {
 		if pod.Namespace == namespace {
-			if pod.Status.Phase == "Running" {
+			if pod.Status.Phase == RunningPodState {
 				for container := range pod.Spec.Containers {
 					if pod.Spec.Containers[container].Name == "driver" {
 						driverName = pod.Spec.Containers[container].Name
