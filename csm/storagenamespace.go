@@ -98,7 +98,7 @@ func GetClientSetFromConfig() *kubernetes.Clientset {
 }
 
 // GetNodes returns the array of nodes in the Kubernetes cluster
-func GetNodes() []string {
+func GetNodes() {
 	// access the API to list Nodes
 	// clientset := GetClientSetFromConfig()
 	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
@@ -114,7 +114,6 @@ func GetNodes() []string {
 	}
 	fmt.Println(nodearray)
 	snsLog.Debugf("Cluster nodes listed: %s", nodearray)
-	return nodearray
 }
 
 // ValidateNamespace validates if given namespace exists in the Kubernetes cluster
