@@ -49,7 +49,7 @@ type StorageNameSpace interface {
 	GetLogs(string, string)
 	GetPods() []string
 	GetDriverDetails(string) (string, string, string)
-	GetLeaseDetails()
+	GetLeaseDetails() string
 	GetRunningPods(string, *corev1.Pod)
 	GetNonRunningPods(string, *corev1.Pod)
 	DescribePods(string, describe.DescriberSettings, string)
@@ -100,7 +100,7 @@ func GetClientSetFromConfig() *kubernetes.Clientset {
 // GetNodes returns the array of nodes in the Kubernetes cluster
 func GetNodes() {
 	// access the API to list Nodes
-	// clientset := GetClientSetFromConfig()
+	clientset := GetClientSetFromConfig()
 	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Fatalf("Error while getting nodes: %s", err.Error())
@@ -137,7 +137,7 @@ func (s StorageNameSpaceStruct) ValidateNamespace(ns []string) {
 // GetNamespaces returns the array of namespaces in the Kubernetes cluster
 func GetNamespaces() []string {
 	// access the API to list Namespaces
-	// clientset := GetClientSetFromConfig()
+	clientset := GetClientSetFromConfig()
 	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Fatalf("Error while getting namespaces: %s", err.Error())
@@ -215,7 +215,7 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 }
 
 // GetLeaseDetails gets the lease details
-func (s StorageNameSpaceStruct) GetLeaseDetails() {
+func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 	// kubectl get leases -n <namespace>
 	clientset := GetClientSetFromConfig()
 	fmt.Printf("\n\nLease pod for %s..............\n", s.namespaceName)
@@ -225,7 +225,7 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() {
 	if err != nil {
 		snsLog.Fatalf("Getting lease details in namespace %s failed with error: %s", s.namespaceName, err.Error())
 	}
-
+	var holder string
 	leasepod := "driver-csi-" + s.namespaceName + "-dellemc-com"
 	for _, lease := range leasePodList.Items {
 		if strings.Contains(lease.Name, leasepod) {
@@ -234,8 +234,10 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() {
 			fmt.Printf("\t%s\n", *lease.Spec.HolderIdentity) // Points to same controller pod for all instances
 			snsLog.Debugf("Lease pod detailes: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
 			fmt.Println()
+			holder = *lease.Spec.HolderIdentity
 		}
 	}
+	return holder
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods

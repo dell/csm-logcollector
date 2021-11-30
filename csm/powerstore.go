@@ -34,7 +34,7 @@ type PowerStoreStruct struct {
 }
 
 // GetLeaseDetails collects lease details
-func (p PowerStoreStruct) GetLeaseDetails() {
+func (p PowerStoreStruct) GetLeaseDetails() string {
 	fmt.Printf("\n\nLease pod for %s..............\n", p.namespaceName)
 	fmt.Println("=====================================")
 	_ = &coordinationv1.Lease{}
@@ -42,6 +42,7 @@ func (p PowerStoreStruct) GetLeaseDetails() {
 	if err != nil {
 		psLog.Fatalf("Getting lease details in namespace %s failed with error: %s", p.namespaceName, err.Error())
 	}
+	var holder string
 	leasepod := "external-attacher-leader-" + p.namespaceName + "-dellemc-com"
 
 	for _, lease := range leasePodList.Items {
@@ -51,8 +52,10 @@ func (p PowerStoreStruct) GetLeaseDetails() {
 			fmt.Printf("\t%s\n", *lease.Spec.HolderIdentity) // Points to same controller pod for all instances
 			psLog.Debugf("Lease pod detailes: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
 			fmt.Println()
+			holder = *lease.Spec.HolderIdentity
 		}
 	}
+	return holder
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods

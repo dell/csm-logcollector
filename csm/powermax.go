@@ -34,6 +34,9 @@ type PowerMaxStruct struct {
 	StorageNameSpaceStruct
 }
 
+// Lease holder variable
+var LeaseHolder string
+
 // GetRunningPods is overridden for PowerMax specific implementation
 func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
@@ -43,6 +46,19 @@ func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev
 	podDirectoryName := createDirectory(dirName)
 	containerCount := len(pod.Spec.Containers)
 	fmt.Printf("\tThere are %d containers for this pod\n", containerCount)
+
+	// check for reverse-proxy sidecar in controller pod
+	if pod.Name == LeaseHolder {
+		var flag bool = false
+		for container := range pod.Spec.Containers {
+			if pod.Spec.Containers[container].Name == "reverseproxy" {
+				flag = true
+				break
+			}
+		}
+
+		pmaxLog.Infof("Reverse Proxy is deployed as sidecar: %t", flag)
+	}
 
 	for container := range pod.Spec.Containers {
 		fmt.Println("\t\t", pod.Spec.Containers[container].Name)
@@ -78,6 +94,19 @@ func (p PowerMaxStruct) GetNonRunningPods(namespaceDirectoryName string, pod *co
 	containerCount := len(pod.Spec.Containers)
 	fmt.Printf("There are %d containers for this pod\n", containerCount)
 
+	// check for reverse-proxy sidecar in controller pod
+	if pod.Name == LeaseHolder {
+		var flag bool = false
+		for container := range pod.Spec.Containers {
+			if pod.Spec.Containers[container].Name == "reverseproxy" {
+				flag = true
+				break
+			}
+		}
+
+		pmaxLog.Infof("Reverse Proxy is deployed as sidecar: %t", flag)
+	}
+
 	for container := range pod.Spec.Containers {
 		fmt.Println("\t\t", pod.Spec.Containers[container].Name)
 		dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
@@ -109,7 +138,7 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string) {
 		p.DescribePods(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 	}
 
-	p.GetLeaseDetails()
+	LeaseHolder = p.GetLeaseDetails()
 	fmt.Println("\n*******************************************************************************")
 
 	fmt.Printf("\nOptional flag: %s", optionalFlag)
