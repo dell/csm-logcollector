@@ -34,7 +34,7 @@ type PowerMaxStruct struct {
 	StorageNameSpaceStruct
 }
 
-// Lease holder variable
+// LeaseHolder variable to old the lease holder
 var LeaseHolder string
 
 // GetRunningPods is overridden for PowerMax specific implementation
