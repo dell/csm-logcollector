@@ -259,7 +259,7 @@ func createDirectory(name string) (dirName string) {
 // DescribePods describes the pods in the given namespace
 func (s StorageNameSpaceStruct) DescribePods(podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
 	clientset := GetClientSetFromConfig()
-	d := describe.PodDescriber{clientset}
+	d := describe.PodDescriber{Interface: clientset}
 	DescribePodDetails, err := d.Describe(s.namespaceName, podName, describerSettings)
 	if err != nil {
 		snsLog.Fatalf("Describing pod %s in namespace %s failed with error: %s", podName, s.namespaceName, err.Error())
