@@ -22,10 +22,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"gopkg.in/yaml.v2"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -65,16 +68,22 @@ type StorageNameSpaceStruct struct {
 
 var clientset *kubernetes.Clientset
 var once sync.Once
+var destinationPath string
+var kubeconfigPath string
 
 // SetClientSetFromConfig creates ClientSet object
 func SetClientSetFromConfig() *kubernetes.Clientset {
 	once.Do(func() {
 		if clientset == nil {
 			var kubeconfig *string
-			if home := homedir.HomeDir(); home != "" {
-				kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+			ReadConfigFile()
+			if kubeconfigPath != "" {
+				snsLog.Infof("Custom kubeconfig Path: %s", kubeconfigPath)
+				kubeconfig = flag.String("kubeconfig", kubeconfigPath, "absolute path to the kubeconfig file")
 			} else {
-				kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+				home := homedir.HomeDir()
+				kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+				snsLog.Infof("Standard kubeconfig Path: %s", kubeconfig)
 			}
 			flag.Parse()
 
@@ -337,6 +346,35 @@ func captureLOG(repoName string, filename string, content string) {
 	w.Flush()
 }
 
+func ReadConfigFile() {
+	_, err := os.Stat("config.yml")
+	if err == nil {
+		yamlFile, err := ioutil.ReadFile("config.yml")
+		if err != nil {
+			snsLog.Fatalf("Reading configuration file failed with error %v ", err)
+		}
+
+		data := make(map[interface{}]interface{})
+		err = yaml.Unmarshal(yamlFile, data)
+		if err != nil {
+			snsLog.Fatalf("Unmarshalling configuration file failed with error %v", err)
+		}
+
+		for k, v := range data {
+			if k == "destination_path" {
+				destinationPath = fmt.Sprintf("%s", v)
+				snsLog.Infof("destination path: %s", destinationPath)
+			}
+
+			if k == "kubeconfig_path" {
+				kubeconfigPath = fmt.Sprintf("%s", v)
+				snsLog.Infof("kubeconfig path: %s", kubeconfigPath)
+
+			}
+		}
+	}
+}
+
 func createTarball(source string, target string) error {
 	filename := filepath.Base(source)
 	// add the logs.txt file to source directory file
@@ -408,6 +446,16 @@ func createTarball(source string, target string) error {
 	if errMsgRemove != nil {
 		snsLog.Errorf("Removing file %s failed with error: %s", path, errMsgRemove.Error())
 		return errMsgRemove
+	}
+
+	// Move tarball to given path if provided
+	if destinationPath != "" {
+		destinationPath = destinationPath + "/" + target
+		err := os.Rename(target, destinationPath)
+		if err != nil {
+			snsLog.Errorf("Moving file %s failed with error: %s", target, err.Error())
+			return err
+		}
 	}
 
 	fmt.Println("Archive created successfully")

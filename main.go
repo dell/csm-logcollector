@@ -28,20 +28,64 @@ func main() {
 	fmt.Println("\t=================")
 	fmt.Println()
 	var consent string
+	var namespace string
+	var optionalFlag string
+	var result bool
+	var nsSlice []string
+	var p csm.StorageNameSpace
+
 	fmt.Println("As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)")
 	fmt.Scanln(&consent)
 	if consent != "Y" && consent != "y" {
 		logger.Fatalf("Exiting the application as consent is not provided.")
 	}
-	fmt.Println("Enter the namespace: ")
-	var namespace string
-	var optionalFlag string
-	var p csm.StorageNameSpace
 
+	fmt.Println("Enter the namespace: ")
 	fmt.Scanln(&namespace)
 	temp := strings.ToLower(namespace)
+	namespaces := csm.GetNamespaces()
+
+	result, nsSlice = CheckNamespace(temp, namespaces)
 
 	count := 4
+	if !result && len(nsSlice) == 0 {
+		for count > 0 {
+			fmt.Println("Given namespace is not found. Please enter valid namespace:")
+			fmt.Scanln(&namespace)
+			temp = strings.ToLower(namespace)
+			result, nsSlice = CheckNamespace(temp, namespaces)
+			if result || len(nsSlice) > 0 {
+				break
+			}
+			count--
+		}
+	}
+
+	CheckCount(count)
+
+	if !result {
+		count = 4
+		for count > 0 {
+			index := 0
+			fmt.Println("Please select the correct namespace from the below choices:")
+			for i, x := range nsSlice {
+				fmt.Printf("%d. %s\n", i+1, x)
+			}
+			fmt.Println("Enter the choice:")
+			fmt.Scanln(&index)
+			if index < 1 || index > len(nsSlice) {
+				fmt.Println("Please select valid namespace")
+				count--
+			} else {
+				temp = nsSlice[index-1]
+				break
+			}
+		}
+	}
+
+	CheckCount(count)
+
+	count = 4
 	for count > 0 {
 		fmt.Println("By default, all logs will be collected. Please enter True/true.")
 		fmt.Scanln(&optionalFlag)
@@ -51,9 +95,7 @@ func main() {
 		count--
 	}
 
-	if count == 0 {
-		panic("All retries are exceeded.")
-	}
+	CheckCount(count)
 
 	if strings.Contains(temp, "isilon") || strings.Contains(temp, "powerscale") {
 		p = csm.PowerScaleStruct{}
@@ -67,6 +109,27 @@ func main() {
 		p = csm.PowerFlexStruct{}
 	}
 
-	p.GetLogs(namespace, optionalFlag)
+	p.GetLogs(temp, optionalFlag)
+}
 
+// CheckNamespace verifies if given namespace exists
+func CheckNamespace(namespace string, namespaces []string) (bool, []string) {
+	var result bool = false
+	var nsSlice []string
+	for _, x := range namespaces {
+		if x == namespace {
+			result = true
+			break
+		} else if strings.Contains(x, namespace) {
+			nsSlice = append(nsSlice, x)
+		}
+	}
+	return result, nsSlice
+}
+
+// CheckCount verifies if retries are exceeded
+func CheckCount(count int) {
+	if count == 0 {
+		panic("All retries are exceeded.")
+	}
 }
