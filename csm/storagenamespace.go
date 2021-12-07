@@ -78,12 +78,10 @@ func SetClientSetFromConfig() *kubernetes.Clientset {
 			var kubeconfig *string
 			ReadConfigFile()
 			if kubeconfigPath != "" {
-				snsLog.Infof("Custom kubeconfig Path: %s", kubeconfigPath)
 				kubeconfig = flag.String("kubeconfig", kubeconfigPath, "absolute path to the kubeconfig file")
 			} else {
 				home := homedir.HomeDir()
 				kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-				snsLog.Infof("Standard kubeconfig Path: %s", kubeconfig)
 			}
 			flag.Parse()
 
@@ -346,6 +344,7 @@ func captureLOG(repoName string, filename string, content string) {
 	w.Flush()
 }
 
+// ReadConfigFile reads the application configuration file
 func ReadConfigFile() {
 	_, err := os.Stat("config.yml")
 	if err == nil {
