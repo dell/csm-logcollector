@@ -102,10 +102,10 @@ func GetClientSetFromConfig() kubernetes.Interface {
 	return SetClientSetFromConfig()
 }
 
-func init(){
+func init() {
 	if !strings.Contains(os.Args[0], ".test") {
 		clientset = GetClientSetFromConfig()
-    }
+	}
 }
 
 // GetNodes returns the array of nodes in the Kubernetes cluster
@@ -130,7 +130,7 @@ func GetNodes() []string {
 // GetNamespaces returns the array of namespaces in the Kubernetes cluster
 func GetNamespaces() []string {
 	// access the API to list Namespaces
-	
+
 	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Fatalf("Error while getting namespaces: %s", err.Error())
