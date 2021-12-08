@@ -1,22 +1,23 @@
 package csm
 
 import (
-	"strings"
-	"testing"
 	"context"
 	"io/ioutil"
+	"strings"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
-	"k8s.io/api/core/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/apimachinery/pkg/runtime"
 	coordinationv1 "k8s.io/api/coordination/v1"
+	v1 "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 	describe "k8s.io/kubectl/pkg/describe"
 )
 
 func CreatePod(clientset kubernetes.Interface, namespace string, name string, containerName string) *v1.Pod {
-	pod := &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace},Spec: v1.PodSpec{Containers: []v1.Container{{Name: containerName}}}}
+	pod := &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace}, Spec: v1.PodSpec{Containers: []v1.Container{{Name: containerName}}}}
 	resp, _ := clientset.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, meta_v1.CreateOptions{})
 	return resp
 }
@@ -34,7 +35,7 @@ func CreateLease(clientset kubernetes.Interface, name string, namespaceName stri
 }
 
 func pod(namespace, podName string, image string, driverName string) *v1.Pod {
-	return &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Namespace: namespace, Name: podName},Spec: v1.PodSpec{Containers: []v1.Container{{Name: driverName, Image: image}}}}
+	return &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Namespace: namespace, Name: podName}, Spec: v1.PodSpec{Containers: []v1.Container{{Name: driverName, Image: image}}}}
 }
 
 func CreateNodes(client kubernetes.Interface, name string) *v1.Node {
@@ -42,7 +43,6 @@ func CreateNodes(client kubernetes.Interface, name string) *v1.Node {
 	resp, _ := client.CoreV1().Nodes().Create(context.TODO(), node, meta_v1.CreateOptions{})
 	return resp
 }
-
 
 func TestGetPods(t *testing.T) {
 	var st StorageNameSpaceStruct
@@ -54,10 +54,10 @@ func TestGetPods(t *testing.T) {
 		objs        []runtime.Object
 	}{
 		{"pods list for a namespace",
-		 st.namespaceName,
-		 []string{"pod_1", "pod_2"},
-		 []runtime.Object{pod(st.namespaceName, "pod_1", "driver_image_1:v1", "driver_1"),
-		 				  pod(st.namespaceName, "pod_2", "driver_image_2:v2", "driver_2")}},
+			st.namespaceName,
+			[]string{"pod_1", "pod_2"},
+			[]runtime.Object{pod(st.namespaceName, "pod_1", "driver_image_1:v1", "driver_1"),
+				pod(st.namespaceName, "pod_2", "driver_image_2:v2", "driver_2")}},
 	}
 
 	for _, test := range tests {
@@ -75,21 +75,21 @@ func TestGetPods(t *testing.T) {
 func TestGetDriverDetails(t *testing.T) {
 	var st StorageNameSpaceStruct
 	var tests = []struct {
-		description             string
-		expected_namespace      string
-		objs        			[]runtime.Object
+		description       string
+		expectedNamespace string
+		objs              []runtime.Object
 	}{
 		{"driver details",
-		"csi-powerstore",
-		[]runtime.Object{pod("csi-powerstore", "test_pod_1", "driver", "driver_image_1:v1.0.0")}},
+			"csi-powerstore",
+			[]runtime.Object{pod("csi-powerstore", "test_pod_1", "driver", "driver_image_1:v1.0.0")}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
 			clientset = fake.NewSimpleClientset(test.objs...)
-			got_namespace, _, _ := st.GetDriverDetails("csi-powerstore")
-			if diff := cmp.Diff(got_namespace, test.expected_namespace); diff != "" {
-				t.Errorf("%T differ (-got, +want): %s", test.expected_namespace, diff)
+			gotNamespace, _, _ := st.GetDriverDetails("csi-powerstore")
+			if diff := cmp.Diff(gotNamespace, test.expectedNamespace); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedNamespace, diff)
 				return
 			}
 		})
@@ -100,11 +100,11 @@ func TestGetDescribePods(t *testing.T) {
 	var st StorageNameSpaceStruct
 	st.namespaceName = "vxflexos-namespace"
 	var tests = []struct {
-		description             string
-		expected_data 			string
+		description  string
+		expectedData string
 	}{
 		{"Describe pod",
-		"Name:         test-describe-pod",
+			"Name:         test-describe-pod",
 		},
 	}
 
@@ -117,14 +117,13 @@ func TestGetDescribePods(t *testing.T) {
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			strings.SplitN(got, "\n", 1)
-			if !strings.Contains(got, test.expected_data){
-				t.Errorf("%T differ (-got, +want): \n\t\t - %s\n\t\t + %s", test.expected_data, got, test.expected_data)
+			if !strings.Contains(got, test.expectedData) {
+				t.Errorf("%T differ (-got, +want): \n\t\t - %s\n\t\t + %s", test.expectedData, got, test.expectedData)
 				return
 			}
 		})
 	}
 }
-
 
 func TestGetRunningPods(t *testing.T) {
 	type tests = []struct {
@@ -230,7 +229,7 @@ func TestGetNonRunningPods(t *testing.T) {
 			}
 		})
 	}
-	
+
 	// PowerFlex
 	var pflx PowerFlexStruct
 	var pflxTests = tests{
@@ -283,7 +282,7 @@ func TestGetLeaseDetails(t *testing.T) {
 		description string
 		leaseName   string
 		namespace   string
-		podName   	string
+		podName     string
 		expected    string
 	}
 
@@ -310,8 +309,8 @@ func TestGetLeaseDetails(t *testing.T) {
 
 func TestGetNamespaces(t *testing.T) {
 	type tests = []struct {
-		description 			string
-		expected_namespaces   	[]string
+		description        string
+		expectedNamespaces []string
 	}
 
 	var stTests = tests{
@@ -323,9 +322,9 @@ func TestGetNamespaces(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			_ = CreateNamespace(clientset, "ns-1")
 			_ = CreateNamespace(clientset, "ns-2")
-			got_namespaces := GetNamespaces()
-			if diff := cmp.Diff(got_namespaces, test.expected_namespaces); diff != "" {
-				t.Errorf("%T differ (-got, +want): %s", test.expected_namespaces, diff)
+			gotNamespaces := GetNamespaces()
+			if diff := cmp.Diff(gotNamespaces, test.expectedNamespaces); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedNamespaces, diff)
 				return
 			}
 		})
@@ -334,22 +333,22 @@ func TestGetNamespaces(t *testing.T) {
 
 func TestGetNodes(t *testing.T) {
 	type tests = []struct {
-		description 			string
-		expected_namespaces   	[]string
+		description        string
+		expectedNamespaces []string
 	}
 
 	var stTests = tests{
-		{"get namespaces", []string{"10.10.120.180", "10.10.120.181"}},
+		{"get namespaces", []string{"10.xx.xxx.xxx", "11.xx.xxx.xxx"}},
 	}
 
 	for _, test := range stTests {
 		t.Run(test.description, func(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
-			_ = CreateNodes(clientset, "10.10.120.180")
-			_ = CreateNodes(clientset, "10.10.120.181")
-			got_nodes := GetNodes()
-			if diff := cmp.Diff(got_nodes, test.expected_namespaces); diff != "" {
-				t.Errorf("%T differ (-got, +want): %s", test.expected_namespaces, diff)
+			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
+			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
+			gotNodes := GetNodes()
+			if diff := cmp.Diff(gotNodes, test.expectedNamespaces); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedNamespaces, diff)
 				return
 			}
 		})
