@@ -60,12 +60,9 @@ func (p PowerStoreStruct) GetLeaseDetails() string {
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
 func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
-	clientset := GetClientSetFromConfig()
 	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
 	GetNodes()
-	nsarray := GetNamespaces()
-	p.ValidateNamespace(nsarray)
 	podarray := p.GetPods()
 
 	var dirName string

@@ -56,7 +56,6 @@ type StorageNameSpace interface {
 	GetRunningPods(string, *corev1.Pod)
 	GetNonRunningPods(string, *corev1.Pod)
 	DescribePods(string, describe.DescriberSettings, string)
-	ValidateNamespace([]string)
 }
 
 // StorageNameSpaceStruct structure declares CSI driver fields
@@ -66,13 +65,13 @@ type StorageNameSpaceStruct struct {
 	driverversion string
 }
 
-var clientset *kubernetes.Clientset
 var once sync.Once
 var destinationPath string
 var kubeconfigPath string
+var clientset kubernetes.Interface
 
 // SetClientSetFromConfig creates ClientSet object
-func SetClientSetFromConfig() *kubernetes.Clientset {
+func SetClientSetFromConfig() kubernetes.Interface {
 	once.Do(func() {
 		if clientset == nil {
 			var kubeconfig *string
@@ -89,7 +88,6 @@ func SetClientSetFromConfig() *kubernetes.Clientset {
 			if err != nil {
 				snsLog.Fatalf("Error while building config object: %s", err.Error())
 			}
-
 			clientset, err = kubernetes.NewForConfig(config)
 			if err != nil {
 				snsLog.Fatalf("Error while building clientset object: %s", err.Error())
@@ -100,14 +98,19 @@ func SetClientSetFromConfig() *kubernetes.Clientset {
 }
 
 // GetClientSetFromConfig returns ClientSet object
-func GetClientSetFromConfig() *kubernetes.Clientset {
+func GetClientSetFromConfig() kubernetes.Interface {
 	return SetClientSetFromConfig()
 }
 
+func init(){
+	if !strings.Contains(os.Args[0], ".test") {
+		clientset = GetClientSetFromConfig()
+    }
+}
+
 // GetNodes returns the array of nodes in the Kubernetes cluster
-func GetNodes() {
+func GetNodes() []string {
 	// access the API to list Nodes
-	clientset := GetClientSetFromConfig()
 	nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Fatalf("Error while getting nodes: %s", err.Error())
@@ -121,30 +124,13 @@ func GetNodes() {
 	}
 	fmt.Println(nodearray)
 	snsLog.Debugf("Cluster nodes listed: %s", nodearray)
-}
-
-// ValidateNamespace validates if given namespace exists in the Kubernetes cluster
-func (s StorageNameSpaceStruct) ValidateNamespace(ns []string) {
-	fmt.Printf("************ %s\n", s.namespaceName)
-	var result bool = false
-	for _, x := range ns {
-		if x == s.namespaceName {
-			result = true
-			break
-		}
-	}
-
-	if result {
-		snsLog.Infof("Given Namespace is available in the given environment")
-	} else {
-		snsLog.Fatalf("Given Namespace is not available in the given environment.")
-	}
+	return nodearray
 }
 
 // GetNamespaces returns the array of namespaces in the Kubernetes cluster
 func GetNamespaces() []string {
 	// access the API to list Namespaces
-	clientset := GetClientSetFromConfig()
+	
 	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Fatalf("Error while getting namespaces: %s", err.Error())
@@ -187,7 +173,6 @@ func (s StorageNameSpaceStruct) GetPods() []string {
 // GetDriverDetails populates the CSI driver fields
 func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, string, string) {
 	// Get CSI driver info for a particular namespace
-	clientset := GetClientSetFromConfig()
 	fmt.Println("\n\nDRIVER INFO..............")
 	fmt.Println("=========================")
 	podlist, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
@@ -224,7 +209,6 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 // GetLeaseDetails gets the lease details
 func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 	// kubectl get leases -n <namespace>
-	clientset := GetClientSetFromConfig()
 	fmt.Printf("\n\nLease pod for %s..............\n", s.namespaceName)
 	fmt.Println("=====================================")
 	_ = &coordinationv1.Lease{}
@@ -265,7 +249,6 @@ func createDirectory(name string) (dirName string) {
 
 // DescribePods describes the pods in the given namespace
 func (s StorageNameSpaceStruct) DescribePods(podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
-	clientset := GetClientSetFromConfig()
 	d := describe.PodDescriber{Interface: clientset}
 	DescribePodDetails, err := d.Describe(s.namespaceName, podName, describerSettings)
 	if err != nil {

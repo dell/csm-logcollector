@@ -119,12 +119,9 @@ func (p PowerMaxStruct) GetNonRunningPods(namespaceDirectoryName string, pod *co
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
 func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string) {
-	clientset := GetClientSetFromConfig()
 	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
 	GetNodes()
-	nsarray := GetNamespaces()
-	p.ValidateNamespace(nsarray)
 	podarray := p.GetPods()
 
 	var dirName string

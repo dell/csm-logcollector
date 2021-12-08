@@ -33,12 +33,9 @@ type UnityStruct struct {
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
 func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
-	clientset := GetClientSetFromConfig()
 	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
 	GetNodes()
-	nsarray := GetNamespaces()
-	p.ValidateNamespace(nsarray)
 	podarray := p.GetPods()
 
 	var dirName string
