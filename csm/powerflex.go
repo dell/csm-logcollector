@@ -28,7 +28,7 @@ import (
 )
 
 // Logging object
-var pflxLog = utils.GetLogger()
+var pflxLog, _ = utils.GetLogger()
 
 // PowerFlexStruct for PowerFlex platform
 type PowerFlexStruct struct {

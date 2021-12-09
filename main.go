@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-var logger = utils.GetLogger()
+var logger, _ = utils.GetLogger()
 
 func main() {
 	logger.Info("Log started for csm-logcollector")
@@ -33,8 +33,9 @@ func main() {
 	var result bool
 	var nsSlice []string
 	var p csm.StorageNameSpace
+	const consentMsg string = "As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)"
 
-	fmt.Println("As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)")
+	fmt.Println(consentMsg)
 	fmt.Scanln(&consent)
 	if consent != "Y" && consent != "y" {
 		logger.Fatalf("Exiting the application as consent is not provided.")

@@ -6,18 +6,22 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
 var singletonLog *logrus.Logger
 var once sync.Once
+var logfile string
 
 // SetLogger creates the logger object
-func SetLogger() *logrus.Logger {
+func SetLogger() (*logrus.Logger, string) {
 	once.Do(func() {
 		if singletonLog == nil {
-			file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+			t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
+			logfile = t + "_logs.txt"
+			file, err := os.OpenFile(logfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 			singletonLog = logrus.New()
 			singletonLog.Level = logrus.InfoLevel
 			singletonLog.SetReportCaller(true)
@@ -38,11 +42,11 @@ func SetLogger() *logrus.Logger {
 			}
 		}
 	})
-	return singletonLog
+	return singletonLog, logfile
 }
 
 // GetLogger returns the logger object
-func GetLogger() *logrus.Logger {
+func GetLogger() (*logrus.Logger, string) {
 	return SetLogger()
 }
 

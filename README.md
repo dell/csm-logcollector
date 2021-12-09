@@ -16,6 +16,11 @@ You may obtain a copy of the License at
 
 Dell EMC Container Storage Modules (CSM) Log Collector is an open-source application designed to collect the logs of Dell EMC CSM products.
 
+## Supported Platforms
+   | **Log collector** | **CSI Drivers** | **Operating System**|
+|---------------------|-----------------------|------------------------------|
+| v1.0.0 | PowerMax <br> PowerScale <br> PowerStore <br> Unity <br> VxflexOs|Ubuntu 18.04  <br> RHEL 8.4 |
+
 ## Support
 For any CSM log collector issues, questions or feedback, please follow our [support process](https://github.com/dell/csm/blob/main/docs/SUPPORT.md)
 

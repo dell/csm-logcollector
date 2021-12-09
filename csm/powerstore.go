@@ -26,7 +26,7 @@ import (
 )
 
 // Logging object
-var psLog = utils.GetLogger()
+var psLog, _ = utils.GetLogger()
 
 // PowerStoreStruct for PowerStore platform
 type PowerStoreStruct struct {

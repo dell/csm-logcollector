@@ -27,7 +27,7 @@ import (
 )
 
 // Logging object
-var pmaxLog = utils.GetLogger()
+var pmaxLog, _ = utils.GetLogger()
 
 // PowerMaxStruct for PowerMax platform
 type PowerMaxStruct struct {

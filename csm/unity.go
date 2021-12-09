@@ -24,7 +24,7 @@ import (
 )
 
 // Logging object
-var unityLog = utils.GetLogger()
+var unityLog, _ = utils.GetLogger()
 
 // UnityStruct for Unity platform
 type UnityStruct struct {

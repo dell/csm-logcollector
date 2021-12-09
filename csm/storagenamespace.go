@@ -45,7 +45,7 @@ const (
 )
 
 // Logging object
-var snsLog = utils.GetLogger()
+var snsLog, logfile = utils.GetLogger()
 
 // StorageNameSpace interface declares log collection methods
 type StorageNameSpace interface {
@@ -359,8 +359,8 @@ func ReadConfigFile() {
 
 func createTarball(source string, target string) error {
 	filename := filepath.Base(source)
-	// add the logs.txt file to source directory file
-	copy("logs.txt", source)
+	// add the log file file to source directory
+	copy(logfile, source)
 	target = filepath.Join(target, fmt.Sprintf("%s.tar.gz", filename))
 	tarfile, err := os.Create(target)
 	if err != nil {
@@ -418,12 +418,12 @@ func createTarball(source string, target string) error {
 			return err
 		})
 	if errMsgWalk != nil {
-		snsLog.Errorf("Walking the directory %s failed with error: %s", source, errMsgWalk.Error())
+		snsLog.Errorf("Navigating through the directory %s failed with error: %s", source, errMsgWalk.Error())
 		return errMsgWalk
 	}
 
-	// remove the logs.txt file to source directory file
-	path := source + "/logs.txt"
+	// remove the log file from source directory
+	path := source + "/" + logfile
 	errMsgRemove := os.Remove(path)
 	if errMsgRemove != nil {
 		snsLog.Errorf("Removing file %s failed with error: %s", path, errMsgRemove.Error())
@@ -432,7 +432,12 @@ func createTarball(source string, target string) error {
 
 	// Move tarball to given path if provided
 	if destinationPath != "" {
-		destinationPath = destinationPath + "/" + target
+		if strings.HasSuffix(destinationPath, "/") {
+			destinationPath = destinationPath + target
+		} else {
+			destinationPath = destinationPath + "/" + target
+		}
+
 		err := os.Rename(target, destinationPath)
 		if err != nil {
 			snsLog.Errorf("Moving file %s failed with error: %s", target, err.Error())
@@ -460,7 +465,7 @@ func copy(src, dst string) {
 	}
 	defer source.Close()
 
-	dst = dst + "/logs.txt"
+	dst = dst + "/" + logfile
 	destination, err := os.Create(dst)
 	if err != nil {
 		snsLog.Fatalf("Creating file %s failed with error: %s", dst, err.Error())
@@ -470,5 +475,5 @@ func copy(src, dst string) {
 	if err != nil {
 		snsLog.Fatalf("Copying the contents of file failed with error: %s", err.Error())
 	}
-	snsLog.Debugf("logs.txt added to Dir. Copied %d  bytes", nBytes)
+	snsLog.Debugf("log file added to Dir. Copied %d  bytes", nBytes)
 }

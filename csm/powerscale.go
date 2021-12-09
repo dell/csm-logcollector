@@ -24,7 +24,7 @@ import (
 )
 
 // Logging object
-var pscLog = utils.GetLogger()
+var pscLog, _ = utils.GetLogger()
 
 // PowerScaleStruct for PowerScale platform
 type PowerScaleStruct struct {
