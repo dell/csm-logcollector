@@ -1,0 +1,2 @@
+kubeconfig_path: "/home/config"
+destination_path: "/home"
