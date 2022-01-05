@@ -70,6 +70,16 @@ func (p PowerScaleStruct) GetLogs(namespace string, optionalFlag string) {
 			}
 		}
 	}
+
+	// Perform sanitization
+	secretFilePaths := GetSecretFilePath(namespace)
+	if len(secretFilePaths) != 0 {
+		sensitiveContentList := readSecretFileContent(secretFilePaths)
+		performSanitization(sensitiveContentList, namespaceDirectoryName)
+	} else {
+		pscLog.Info("Sanitization not performed.")
+	}
+
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {

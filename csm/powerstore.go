@@ -98,6 +98,15 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 		}
 	}
 
+	// Perform sanitization
+	secretFilePaths := GetSecretFilePath(namespace)
+	if len(secretFilePaths) != 0 {
+		sensitiveContentList := readSecretFileContent(secretFilePaths)
+		performSanitization(sensitiveContentList, namespaceDirectoryName)
+	} else {
+		psLog.Info("Sanitization not performed.")
+	}
+
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {

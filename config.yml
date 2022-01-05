@@ -1,2 +1,8 @@
 kubeconfig_path: "/home/config"
 destination_path: "/home"
+driver_path:
+  csi-unity: "/root/csi-unity"
+  csi-powerstore: "/root/csi-powerstore"
+  csi-powerscale: "/root/csi-powerscale"
+  csi-powermax: "/root/csi-powermax"
+  csi-powerflex: "/root/csi-powerflex"

@@ -70,6 +70,15 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 		}
 	}
 
+	// Perform sanitization
+	secretFilePaths := GetSecretFilePath(namespace)
+	if len(secretFilePaths) != 0 {
+		sensitiveContentList := readSecretFileContent(secretFilePaths)
+		performSanitization(sensitiveContentList, namespaceDirectoryName)
+	} else {
+		unityLog.Info("Sanitization not performed.")
+	}
+
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
