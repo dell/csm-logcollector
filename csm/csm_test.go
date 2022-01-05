@@ -355,16 +355,16 @@ func TestGetNodes(t *testing.T) {
 	}
 }
 
-func TestGetLogs(t *testing.T){
+func TestGetLogs(t *testing.T) {
 	type tests = []struct {
 		description string
-		namespace string
-		podName string
-		leaseName string
-		expected string
+		namespace   string
+		podName     string
+		leaseName   string
+		expected    string
 	}
-	currentPath , _ := os.Getwd()
-	files , _ := ioutil.ReadDir(currentPath)
+	currentPath, _ := os.Getwd()
+	files, _ := ioutil.ReadDir(currentPath)
 	var tarCreated bool
 	var pflx PowerFlexStruct
 	var pflxTests = tests{
@@ -381,11 +381,11 @@ func TestGetLogs(t *testing.T){
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pflx.GetLogs(test.namespace, "true")
 			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace){
+				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
 				}
 			}
-			if !tarCreated{
+			if !tarCreated {
 				t.Errorf("tar creation not sucessfull.")
 			}
 			tarCreated = false
@@ -407,11 +407,11 @@ func TestGetLogs(t *testing.T){
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pmax.GetLogs(test.namespace, "true")
 			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace){
+				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
 				}
 			}
-			if !tarCreated{
+			if !tarCreated {
 				t.Errorf("tar creation not sucessfull.")
 			}
 			tarCreated = false
@@ -433,11 +433,11 @@ func TestGetLogs(t *testing.T){
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pstore.GetLogs(test.namespace, "true")
 			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace){
+				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
 				}
 			}
-			if !tarCreated{
+			if !tarCreated {
 				t.Errorf("tar creation not sucessfull.")
 			}
 			tarCreated = false
@@ -459,17 +459,17 @@ func TestGetLogs(t *testing.T){
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pscale.GetLogs(test.namespace, "true")
 			for _, file := range files {
-				if strings.Contains(file.Name(),test.namespace){
+				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
 				}
 			}
-			if !tarCreated{
+			if !tarCreated {
 				t.Errorf("tar creation not sucessfull.")
 			}
 			tarCreated = false
 		})
 	}
-	
+
 	var unity UnityStruct
 	var unityTests = tests{
 		{"get logs of unity", "csi-unity", "pod1", "lease1", "tar file should be created"},
@@ -485,11 +485,11 @@ func TestGetLogs(t *testing.T){
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			unity.GetLogs(test.namespace, "true")
 			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace){
+				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
 				}
 			}
-			if !tarCreated{
+			if !tarCreated {
 				t.Errorf("tar creation not sucessfull.")
 			}
 			tarCreated = false
