@@ -2,11 +2,8 @@ package csm
 
 import (
 	"context"
-	"io/ioutil"
-	"strings"
-	"testing"
-	"os"
 	"github.com/google/go-cmp/cmp"
+	"io/ioutil"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,6 +11,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	describe "k8s.io/kubectl/pkg/describe"
+	"os"
+	"strings"
+	"testing"
 )
 
 func CreatePod(clientset kubernetes.Interface, namespace string, name string, containerName string) *v1.Pod {
@@ -333,7 +333,7 @@ func TestGetNamespaces(t *testing.T) {
 
 func TestGetNodes(t *testing.T) {
 	type tests = []struct {
-		description        string
+		description   string
 		expectedNodes []string
 	}
 
@@ -363,9 +363,9 @@ func TestGetLogs(t *testing.T){
 		leaseName string
 		expected string
 	}
-	current_path , _ := os.Getwd()
-	files , _ := ioutil.ReadDir(current_path)
-	var tar_file_found bool
+	currentPath , _ := os.Getwd()
+	files , _ := ioutil.ReadDir(currentPath)
+	var tarCreated bool
 	var pflx PowerFlexStruct
 	var pflxTests = tests{
 		{"get logs of powerflex", "csi-powerflex", "pod1", "lease1", "tar file should be created"},
@@ -382,13 +382,13 @@ func TestGetLogs(t *testing.T){
 			pflx.GetLogs(test.namespace, "true")
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace){
-					tar_file_found = true
+					tarCreated = true
 				}
 			}
-			if !tar_file_found{
+			if !tarCreated{
 				t.Errorf("tar creation not sucessfull.")
 			}
-			tar_file_found = false
+			tarCreated = false
 		})
 	}
 
@@ -408,13 +408,13 @@ func TestGetLogs(t *testing.T){
 			pmax.GetLogs(test.namespace, "true")
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace){
-					tar_file_found = true
+					tarCreated = true
 				}
 			}
-			if !tar_file_found{
+			if !tarCreated{
 				t.Errorf("tar creation not sucessfull.")
 			}
-			tar_file_found = false
+			tarCreated = false
 		})
 	}
 
@@ -434,13 +434,13 @@ func TestGetLogs(t *testing.T){
 			pstore.GetLogs(test.namespace, "true")
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace){
-					tar_file_found = true
+					tarCreated = true
 				}
 			}
-			if !tar_file_found{
+			if !tarCreated{
 				t.Errorf("tar creation not sucessfull.")
 			}
-			tar_file_found = false
+			tarCreated = false
 		})
 	}
 
@@ -460,13 +460,13 @@ func TestGetLogs(t *testing.T){
 			pscale.GetLogs(test.namespace, "true")
 			for _, file := range files {
 				if strings.Contains(file.Name(),test.namespace){
-					tar_file_found = true
+					tarCreated = true
 				}
 			}
-			if !tar_file_found{
+			if !tarCreated{
 				t.Errorf("tar creation not sucessfull.")
 			}
-			tar_file_found = false
+			tarCreated = false
 		})
 	}
 	
@@ -486,13 +486,13 @@ func TestGetLogs(t *testing.T){
 			unity.GetLogs(test.namespace, "true")
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace){
-					tar_file_found = true
+					tarCreated = true
 				}
 			}
-			if !tar_file_found{
+			if !tarCreated{
 				t.Errorf("tar creation not sucessfull.")
 			}
-			tar_file_found = false
+			tarCreated = false
 		})
 	}
 
