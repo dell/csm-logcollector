@@ -109,6 +109,9 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 				sensitiveContentList = PowermaxSecretContent(data, sensitiveContentList)
 			}
 		}
+		if os.IsNotExist(err) {
+			sanityLog.Infof("Content parsing skipped for this file, %s", err)
+		}
 	}
 	return sensitiveContentList
 }
@@ -212,28 +215,23 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 			}
 			if !info.IsDir() {
 				for str := range sensitiveContentList {
-
 					// read file
 					fileContent, err := ioutil.ReadFile(path)
 					if err != nil {
 						sanityLog.Fatalf("File reading failed with error: %s", err)
 					}
 
-					// lowercase conversion
-					var fileData = strings.ToLower(string(fileContent))
+					var fileData = string(fileContent)
 					var isValueExist bool
 
-					isValueExist, err = regexp.Match(sensitiveContentList[str], fileContent)
-					if err != nil {
-						sanityLog.Fatalf("Regex matching for value: %s failed with error: %s", sensitiveContentList[str], err)
-					}
+					// searching sensitive content with case-insensitive matching
+					re := regexp.MustCompile("(?i)" + sensitiveContentList[str])
+					isValueExist = re.Match(fileContent)
 
-					// file identification if key:value both exists in file
+					// masking sensitive content with case-insensitive replacement
 					if isValueExist == true {
 						maskingFlag = true
-						sanityLog.Infof("File: %s contains %s", info.Name(), sensitiveContentList[str])
-						// masking sensitive content
-						fileData = strings.Replace(fileData, sensitiveContentList[str], "*********", -1)
+						fileData = re.ReplaceAllString(fileData, "*********")
 					}
 
 					// write back to original file
@@ -250,8 +248,10 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 		}
 		if maskingFlag {
 			fmt.Printf("Masking sensitive content completed.\n")
+			sanityLog.Infof("Masking sensitive content completed.")
 		} else {
 			fmt.Printf("No sensitive content identified.\n")
+			sanityLog.Infof("No sensitive content identified.")
 		}
 	}
 	return maskingFlag
