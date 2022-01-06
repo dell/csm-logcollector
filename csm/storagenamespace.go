@@ -27,11 +27,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	// "net"
-	// "time"
-	// "path"
-	// "golang.org/x/crypto/ssh"
-	// "github.com/pkg/sftp"
 	"gopkg.in/yaml.v2"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
@@ -95,7 +90,7 @@ func SetClientSetFromConfig() kubernetes.Interface {
 					home := homedir.HomeDir()
 					kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 				}
-			// container node amd master node are different machines
+				// container node amd master node are different machines
 			} else {
 				// SCP config file from remote node to container node
 				remoteKubeconfigPath := utils.ScpConfigFile(kubeconfigPath, clusterIPAddress, clusterUsername, clusterPassword)
@@ -221,7 +216,7 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 	fmt.Printf("\tNamespace: \t%s\n", s.namespaceName)
 	fmt.Printf("\tDriver name: \t%s\n", s.drivername)
 	fmt.Printf("\tDriver version: %s\n", s.driverversion)
-	snsLog.Debugf("Driver detailes listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
+	snsLog.Debugf("Driver details listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
 	return namespace, driverName, driverVersion
 }
 
@@ -242,7 +237,7 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 			fmt.Printf("\t%s\n", lease.Name)
 			fmt.Printf("\t%s\n", lease.Namespace)
 			fmt.Printf("\t%s\n", *lease.Spec.HolderIdentity) // Points to same controller pod for all instances
-			snsLog.Debugf("Lease pod detailes: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
+			snsLog.Debugf("Lease pod details: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
 			fmt.Println()
 			holder = *lease.Spec.HolderIdentity
 		}
@@ -371,7 +366,7 @@ func ReadConfigFile() {
 				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
 				kubeconfig_details, ok := data["kubeconfig_details"].(map[interface{}]interface{})
 				if !ok {
-					snsLog.Fatalf("driver_path is not a map!")
+					snsLog.Fatalf("kubeconfig_details is not a map!")
 				}
 
 				for key, value := range kubeconfig_details {
@@ -382,16 +377,16 @@ func ReadConfigFile() {
 						snsLog.Fatalf("key/value is not string!")
 					}
 					if len(strings.TrimSpace(value)) != 0 {
-						if key == "path"{
+						if key == "path" {
 							kubeconfigPath = value
 						}
-						if key == "ip_address"{
+						if key == "ip_address" {
 							clusterIPAddress = value
 						}
-						if key == "username"{
+						if key == "username" {
 							clusterUsername = value
 						}
-						if key == "password"{
+						if key == "password" {
 							clusterPassword = value
 						}
 					} else {

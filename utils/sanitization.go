@@ -113,6 +113,7 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 	return sensitiveContentList
 }
 
+// UnitySecretContent method reads the secret file content of unity driver
 func UnitySecretContent(data map[interface{}]interface{}, sensitiveContentList []string) []string {
 	_, unityDriverKeys := data["storageArrayList"]
 	if unityDriverKeys {
@@ -125,6 +126,7 @@ func UnitySecretContent(data map[interface{}]interface{}, sensitiveContentList [
 	return sensitiveContentList
 }
 
+// PowerscaleSecretContent method reads the secret file content of powerscale driver
 func PowerscaleSecretContent(data map[interface{}]interface{}, sensitiveContentList []string) []string {
 	_, powerscaleDriverKeys := data["isilonClusters"]
 	if powerscaleDriverKeys {
@@ -137,6 +139,7 @@ func PowerscaleSecretContent(data map[interface{}]interface{}, sensitiveContentL
 	return sensitiveContentList
 }
 
+// PowerstoreSecretContent method reads the secret file content of powerstore driver
 func PowerstoreSecretContent(data map[interface{}]interface{}, sensitiveContentList []string) []string {
 	_, powerstoreDriverKeys := data["arrays"]
 	if powerstoreDriverKeys {
@@ -149,6 +152,7 @@ func PowerstoreSecretContent(data map[interface{}]interface{}, sensitiveContentL
 	return sensitiveContentList
 }
 
+// PowermaxSecretContent method reads the secret file content of powermax driver
 func PowermaxSecretContent(data map[interface{}]interface{}, sensitiveContentList []string) []string {
 	_, powermaxDriverKeys := data["data"]
 	if powermaxDriverKeys {
@@ -161,6 +165,7 @@ func PowermaxSecretContent(data map[interface{}]interface{}, sensitiveContentLis
 	return sensitiveContentList
 }
 
+// IdentifySensitiveContent method performs the identification of sensitive content from specific driver secret file
 func IdentifySensitiveContent(arrayDetailsList []interface{}, sensitiveContentList []string) []string {
 	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
 	for item := range arrayDetailsList {
@@ -194,13 +199,12 @@ func contains(str string, list []string) bool {
 	return false
 }
 
+// PerformSanitization method performs the sanitization of all logs files against the sensitive strings identified
 func PerformSanitization(namespaceDirectoryName string) bool {
 	secretFilePaths := GetSecretFilePath()
-	sanityLog.Infof("secretFilePaths %s", secretFilePaths)
 	var maskingFlag = false
 	if len(secretFilePaths) != 0 {
 		sensitiveContentList := ReadSecretFileContent(secretFilePaths)
-		sanityLog.Infof("Sensitive content identified: %s", sensitiveContentList)
 		err := filepath.Walk(namespaceDirectoryName, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				fmt.Println(err)
@@ -228,7 +232,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 					if isValueExist == true {
 						maskingFlag = true
 						sanityLog.Infof("File: %s contains %s", info.Name(), sensitiveContentList[str])
-						// masking sentsitve content
+						// masking sensitive content
 						fileData = strings.Replace(fileData, sensitiveContentList[str], "*********", -1)
 					}
 
@@ -247,7 +251,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 		if maskingFlag {
 			fmt.Printf("Masking sensitive content completed.\n")
 		} else {
-			fmt.Printf("No senstive content identifed.\n")
+			fmt.Printf("No sensitive content identified.\n")
 		}
 	}
 	return maskingFlag
