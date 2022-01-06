@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
 	"gopkg.in/yaml.v2"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
@@ -364,12 +365,12 @@ func ReadConfigFile() {
 
 			if k == "kubeconfig_details" {
 				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
-				kubeconfig_details, ok := data["kubeconfig_details"].(map[interface{}]interface{})
+				kubeconfigDetails, ok := data["kubeconfig_details"].(map[interface{}]interface{})
 				if !ok {
 					snsLog.Fatalf("kubeconfig_details is not a map!")
 				}
 
-				for key, value := range kubeconfig_details {
+				for key, value := range kubeconfigDetails {
 					// type assertion from interface{} type to string type
 					key, ok1 := key.(string)
 					value, ok2 := value.(string)
