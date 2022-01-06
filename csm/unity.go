@@ -71,12 +71,10 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 	}
 
 	// Perform sanitization
-	secretFilePaths := GetSecretFilePath(namespace)
-	if len(secretFilePaths) != 0 {
-		sensitiveContentList := readSecretFileContent(secretFilePaths)
-		performSanitization(sensitiveContentList, namespaceDirectoryName)
-	} else {
-		unityLog.Info("Sanitization not performed.")
+	ok := utils.PerformSanitization(namespaceDirectoryName)
+	if !ok {
+		unityLog.Infof("Sanitization not performed for %s driver.", namespace)
+		fmt.Printf("Sanitization not performed for %s driver.\n", namespace)
 	}
 
 	errMsg := createTarball(namespaceDirectoryName, ".")
