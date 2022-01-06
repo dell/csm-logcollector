@@ -54,7 +54,7 @@ func GetSecretFilePath() []string {
 				// type assertion from interface{} type to string type
 				value, ok1 := value.(string)
 				key, ok2 := key.(string)
-				if !ok1 && !ok2 {
+				if !ok1 || !ok2 {
 					sanityLog.Fatalf("key/value is not string!")
 				}
 

@@ -27,7 +27,11 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
+	// "net"
+	// "time"
+	// "path"
+	// "golang.org/x/crypto/ssh"
+	// "github.com/pkg/sftp"
 	"gopkg.in/yaml.v2"
 
 	coordinationv1 "k8s.io/api/coordination/v1"
@@ -68,6 +72,9 @@ type StorageNameSpaceStruct struct {
 var once sync.Once
 var destinationPath string
 var kubeconfigPath string
+var clusterIPAddress string
+var clusterUsername string
+var clusterPassword string
 var clientset kubernetes.Interface
 
 // SetClientSetFromConfig creates ClientSet object
@@ -76,11 +83,23 @@ func SetClientSetFromConfig() kubernetes.Interface {
 		if clientset == nil {
 			var kubeconfig *string
 			ReadConfigFile()
-			if kubeconfigPath != "" {
-				kubeconfig = flag.String("kubeconfig", kubeconfigPath, "absolute path to the kubeconfig file")
+			currentIPAddress := utils.GetLocalIP()
+			snsLog.Infof("Current node IP: %s", currentIPAddress)
+
+			// verify current system IP
+			// container node amd master node are same machine
+			if currentIPAddress == clusterIPAddress {
+				if kubeconfigPath != "" {
+					kubeconfig = flag.String("kubeconfig", kubeconfigPath, "absolute path to the kubeconfig file")
+				} else {
+					home := homedir.HomeDir()
+					kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+				}
+			// container node amd master node are different machines
 			} else {
-				home := homedir.HomeDir()
-				kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+				// SCP config file from remote node to container node
+				remoteKubeconfigPath := utils.ScpConfigFile(kubeconfigPath, clusterIPAddress, clusterUsername, clusterPassword)
+				kubeconfig = flag.String("kubeconfig", remoteKubeconfigPath, "absolute path to the kubeconfig file")
 			}
 			flag.Parse()
 
@@ -348,10 +367,37 @@ func ReadConfigFile() {
 				snsLog.Infof("destination path: %s", destinationPath)
 			}
 
-			if k == "kubeconfig_path" {
-				kubeconfigPath = fmt.Sprintf("%s", v)
-				snsLog.Infof("kubeconfig path: %s", kubeconfigPath)
+			if k == "kubeconfig_details" {
+				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
+				kubeconfig_details, ok := data["kubeconfig_details"].(map[interface{}]interface{})
+				if !ok {
+					snsLog.Fatalf("driver_path is not a map!")
+				}
 
+				for key, value := range kubeconfig_details {
+					// type assertion from interface{} type to string type
+					key, ok1 := key.(string)
+					value, ok2 := value.(string)
+					if !ok1 || !ok2 {
+						snsLog.Fatalf("key/value is not string!")
+					}
+					if len(strings.TrimSpace(value)) != 0 {
+						if key == "path"{
+							kubeconfigPath = value
+						}
+						if key == "ip_address"{
+							clusterIPAddress = value
+						}
+						if key == "username"{
+							clusterUsername = value
+						}
+						if key == "password"{
+							clusterPassword = value
+						}
+					} else {
+						snsLog.Infof("No value found for kubeconfig_details sub-key: %s", key)
+					}
+				}
 			}
 		}
 	}
