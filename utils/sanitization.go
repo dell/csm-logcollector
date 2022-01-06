@@ -124,7 +124,7 @@ func UnitySecretContent(data map[interface{}]interface{}, sensitiveContentList [
 		if !ok {
 			sanityLog.Fatalf("storageArrayList is not a slice!")
 		}
-		sensitiveContentList = IdentifySensitiveContent(storageArrayList, sensitiveContentList)
+		sensitiveContentList = TypeConversion(storageArrayList, sensitiveContentList)
 	}
 	return sensitiveContentList
 }
@@ -137,7 +137,7 @@ func PowerscaleSecretContent(data map[interface{}]interface{}, sensitiveContentL
 		if !ok {
 			sanityLog.Fatalf("isilonClusters is not a slice!")
 		}
-		sensitiveContentList = IdentifySensitiveContent(isilonClusters, sensitiveContentList)
+		sensitiveContentList = TypeConversion(isilonClusters, sensitiveContentList)
 	}
 	return sensitiveContentList
 }
@@ -150,7 +150,7 @@ func PowerstoreSecretContent(data map[interface{}]interface{}, sensitiveContentL
 		if !ok {
 			sanityLog.Fatalf("arrays is not a slice!")
 		}
-		sensitiveContentList = IdentifySensitiveContent(arrays, sensitiveContentList)
+		sensitiveContentList = TypeConversion(arrays, sensitiveContentList)
 	}
 	return sensitiveContentList
 }
@@ -159,35 +159,42 @@ func PowerstoreSecretContent(data map[interface{}]interface{}, sensitiveContentL
 func PowermaxSecretContent(data map[interface{}]interface{}, sensitiveContentList []string) []string {
 	_, powermaxDriverKeys := data["data"]
 	if powermaxDriverKeys {
-		arrayData, ok := data["data"].([]interface{})
-		if !ok {
-			sanityLog.Fatalf("arrays is not a slice!")
+		arrayData, ok1 := data["data"].(map[interface{}]interface{})
+		if !ok1 {
+			sanityLog.Fatalf("arrayData is not a map!")
 		}
 		sensitiveContentList = IdentifySensitiveContent(arrayData, sensitiveContentList)
 	}
 	return sensitiveContentList
 }
 
-// IdentifySensitiveContent method performs the identification of sensitive content from specific driver secret file
-func IdentifySensitiveContent(arrayDetailsList []interface{}, sensitiveContentList []string) []string {
-	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
+// TypeConversion method performs the type assertion from slice to map.
+// This is specifically done for Unity, PowerStore, PowerScale drivers due to slightly differnt content format of their secret.yml file.
+func TypeConversion(arrayDetailsList []interface{}, sensitiveContentList []string) []string {
 	for item := range arrayDetailsList {
 		arrayDetailsMap, ok := arrayDetailsList[item].(map[interface{}]interface{})
 		if !ok {
 			sanityLog.Fatalf("arrayDetailsMap is not a map!")
 		}
-		for key, value := range arrayDetailsMap {
-			k, ok := key.(string)
+		sensitiveContentList = IdentifySensitiveContent(arrayDetailsMap, sensitiveContentList)
+	}
+	return sensitiveContentList
+}
+
+// IdentifySensitiveContent method performs the identification of sensitive content from specific drivers' secret file
+func IdentifySensitiveContent(arrayDetailsMap map[interface{}]interface{}, sensitiveContentList []string) []string {
+	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
+	for key, value := range arrayDetailsMap {
+		k, ok := key.(string)
+		if !ok {
+			sanityLog.Fatalf("key is not string!")
+		}
+		if contains(k, sensitiveKeyList) {
+			v, ok := value.(string)
 			if !ok {
-				sanityLog.Fatalf("key is not string!")
+				sanityLog.Fatalf("value is not string!")
 			}
-			if contains(k, sensitiveKeyList) {
-				v, ok := value.(string)
-				if !ok {
-					sanityLog.Fatalf("value is not string!")
-				}
-				sensitiveContentList = append(sensitiveContentList, v)
-			}
+			sensitiveContentList = append(sensitiveContentList, v)
 		}
 	}
 	return sensitiveContentList
