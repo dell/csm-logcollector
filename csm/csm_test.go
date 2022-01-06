@@ -364,7 +364,6 @@ func TestGetLogs(t *testing.T) {
 		expected    string
 	}
 	currentPath, _ := os.Getwd()
-	files, _ := ioutil.ReadDir(currentPath)
 	var tarCreated bool
 	var pflx PowerFlexStruct
 	var pflxTests = tests{
@@ -380,6 +379,7 @@ func TestGetLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pflx.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
@@ -406,6 +406,7 @@ func TestGetLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pmax.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
@@ -432,6 +433,7 @@ func TestGetLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pstore.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
@@ -458,6 +460,7 @@ func TestGetLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			pscale.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
@@ -484,6 +487,7 @@ func TestGetLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			unity.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
 					tarCreated = true
