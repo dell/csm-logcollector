@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2021 Dell Inc, or its subsidiaries.
+ Copyright (c) 2022 Dell Inc, or its subsidiaries.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -90,12 +90,25 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 				sanityLog.Fatalf("Reading secret file %s failed with error %v ", filePath, err)
 			}
 
-			data := make(map[interface{}]interface{})
-			err = yaml.Unmarshal(yamlFile, data)
-			if err != nil {
-				sanityLog.Fatalf("Unmarshalling secret file failed with error %v", err)
+			// secret/config YAML reading
+			var data map[interface{}]interface{}
+			var fileData string
+			if strings.Contains(filePath, "powerflex") {
+				// Powerflex driver has config.yaml which has data as list[map].
+				fileContent, err := ioutil.ReadFile(filePath)
+				fileData = string(fileContent)
+				if err != nil {
+					sanityLog.Fatalf("Reading secret file %s failed with error %v", filePath, err)
+				}
+			} else {
+				data = make(map[interface{}]interface{})
+				err = yaml.Unmarshal(yamlFile, data)
+				if err != nil {
+					sanityLog.Fatalf("Unmarshalling secret file %s failed with error %v", filePath, err)
+				}
 			}
 
+			// secret/config YAML file content reading begins from here based on the respective files of the driver.
 			if strings.Contains(filePath, "unity") {
 				sensitiveContentList = UnitySecretContent(data, sensitiveContentList)
 			}
@@ -108,8 +121,10 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 			if strings.Contains(filePath, "powermax") {
 				sensitiveContentList = PowermaxSecretContent(data, sensitiveContentList)
 			}
-		}
-		if os.IsNotExist(err) {
+			if strings.Contains(filePath, "powerflex") {
+				sensitiveContentList = PowerflexSecretContent(fileData, sensitiveContentList)
+			}
+		} else {
 			sanityLog.Infof("Content parsing skipped for this file, %s", err)
 		}
 	}
@@ -168,6 +183,32 @@ func PowermaxSecretContent(data map[interface{}]interface{}, sensitiveContentLis
 	return sensitiveContentList
 }
 
+// PowerflexSecretContent method reads the secret file content of powerflex driver and identifies the sensitive content
+func PowerflexSecretContent(fileData string, sensitiveContentList []string) []string {
+	fileDataList := strings.Split(fileData, "\n")
+	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
+	sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)
+	for _, str := range fileDataList {
+		if containsKey(str, sensitiveKeyList) {
+			tempValue1 := strings.SplitN(str, "\"", 2)
+			tempValue2 := tempValue1[1]
+			tempValue := strings.SplitN(tempValue2, "\"", 2)
+			value := tempValue[0]
+			sensitiveContentList = append(sensitiveContentList, value)
+		}
+	}
+	return sensitiveContentList
+}
+
+func containsKey(str string, list []string) bool {
+	for _, v := range list {
+		if strings.Contains(str, v) {
+			return true
+		}
+	}
+	return false
+}
+
 // TypeConversion method performs the type assertion from slice to map.
 // This is specifically done for Unity, PowerStore, PowerScale drivers due to slightly differnt content format of their secret.yml file.
 func TypeConversion(arrayDetailsList []interface{}, sensitiveContentList []string) []string {
@@ -184,6 +225,7 @@ func TypeConversion(arrayDetailsList []interface{}, sensitiveContentList []strin
 // IdentifySensitiveContent method performs the identification of sensitive content from specific drivers' secret file
 func IdentifySensitiveContent(arrayDetailsMap map[interface{}]interface{}, sensitiveContentList []string) []string {
 	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
+	sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)
 	for key, value := range arrayDetailsMap {
 		k, ok := key.(string)
 		if !ok {
@@ -238,13 +280,17 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 					// masking sensitive content with case-insensitive replacement
 					if isValueExist == true {
 						maskingFlag = true
+						sanityLog.Infof("Sanitization initiated for file: %s", info.Name())
 						fileData = re.ReplaceAllString(fileData, "*********")
-					}
 
-					// write back to original file
-					if err = ioutil.WriteFile(path, []byte(fileData), 0666); err != nil {
-						sanityLog.Fatalf("File writing failed with error: %s", err)
-						os.Exit(1)
+						// write back to original file
+						err = ioutil.WriteFile(path, []byte(fileData), 0666)
+						if err != nil {
+							sanityLog.Fatalf("File writing failed with error: %s", err)
+							os.Exit(1)
+						} else {
+							sanityLog.Infof("File: %s is sanitized against the sensitive content present in drivers' secret/config YAML files", info.Name())
+						}
 					}
 				}
 			}
@@ -255,10 +301,8 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 		}
 		if maskingFlag {
 			fmt.Printf("Masking sensitive content completed.\n")
-			sanityLog.Infof("Masking sensitive content completed.")
 		} else {
 			fmt.Printf("No sensitive content identified.\n")
-			sanityLog.Infof("No sensitive content identified.")
 		}
 	}
 	return maskingFlag

@@ -165,7 +165,6 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string) {
 	ok := utils.PerformSanitization(namespaceDirectoryName)
 	if !ok {
 		pmaxLog.Infof("Sanitization not performed for %s driver.", namespace)
-		fmt.Printf("Sanitization not performed for %s driver.\n", namespace)
 	}
 
 	errMsg := createTarball(namespaceDirectoryName, ".")
