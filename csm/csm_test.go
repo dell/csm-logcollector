@@ -355,7 +355,84 @@ func TestGetNodes(t *testing.T) {
 	}
 }
 
-func TestGetLogs(t *testing.T) {
+func TestPowermaxLogs(t *testing.T){
+	type tests = []struct {
+		description string
+		namespace   string
+		podName     string
+		leaseName   string
+		expected    string
+	}
+	currentPath, _ := os.Getwd()
+	var tarCreated bool
+	var pmax PowerMaxStruct
+	var pmaxTests = tests{
+		{"get logs of powermax", "csi-powermax", "pod1", "lease1", "tar file should be created"},
+	}
+	for _, test := range pmaxTests {
+		t.Run(test.description, func(t *testing.T) {
+			clientset = fake.NewSimpleClientset()
+			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
+			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
+			_ = CreateNamespace(clientset, "csi-powermax")
+			_ = CreateNamespace(clientset, "ns-2")
+			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
+			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
+			pmax.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
+			for _, file := range files {
+				if strings.Contains(file.Name(), test.namespace) {
+					tarCreated = true
+				}
+			}
+			if !tarCreated {
+				t.Errorf("tar creation not sucessfull.")
+			}
+			tarCreated = false
+		})
+	}
+}
+
+func TestPowerscaleLogs(t *testing.T){
+	type tests = []struct {
+		description string
+		namespace   string
+		podName     string
+		leaseName   string
+		expected    string
+	}
+	currentPath, _ := os.Getwd()
+	var tarCreated bool
+	var pscale PowerScaleStruct
+	var pscaleTests = tests{
+		{"get logs of powerscale", "csi-powerscale", "pod1", "lease1", "tar file should be created"},
+	}
+	for _, test := range pscaleTests {
+		t.Run(test.description, func(t *testing.T) {
+			clientset = fake.NewSimpleClientset()
+			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
+			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
+			_ = CreateNamespace(clientset, "csi-powerscale")
+			_ = CreateNamespace(clientset, "ns-2")
+			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
+			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
+			pscale.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
+			for _, file := range files {
+				if strings.Contains(file.Name(), test.namespace) {
+					tarCreated = true
+				}
+			}
+			if !tarCreated {
+				t.Errorf("tar creation not sucessfull.")
+			}
+			tarCreated = false
+		})
+	}
+
+}
+
+func TestPowerflexLogs(t *testing.T){
 	type tests = []struct {
 		description string
 		namespace   string
@@ -390,89 +467,20 @@ func TestGetLogs(t *testing.T) {
 			}
 			tarCreated = false
 		})
-	}
 
-	var pmax PowerMaxStruct
-	var pmaxTests = tests{
-		{"get logs of powermax", "csi-powermax", "pod1", "lease1", "tar file should be created"},
 	}
-	for _, test := range pmaxTests {
-		t.Run(test.description, func(t *testing.T) {
-			clientset = fake.NewSimpleClientset()
-			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
-			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
-			_ = CreateNamespace(clientset, "csi-powermax")
-			_ = CreateNamespace(clientset, "ns-2")
-			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
-			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pmax.GetLogs(test.namespace, "true")
-			files, _ := ioutil.ReadDir(currentPath)
-			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace) {
-					tarCreated = true
-				}
-			}
-			if !tarCreated {
-				t.Errorf("tar creation not sucessfull.")
-			}
-			tarCreated = false
-		})
-	}
+}
 
-	var pstore PowerStoreStruct
-	var pstoreTests = tests{
-		{"get logs of powerstore", "csi-powerstore", "pod1", "lease1", "tar file should be created"},
+func TestUnityLogs(t *testing.T){
+	type tests = []struct {
+		description string
+		namespace   string
+		podName     string
+		leaseName   string
+		expected    string
 	}
-	for _, test := range pstoreTests {
-		t.Run(test.description, func(t *testing.T) {
-			clientset = fake.NewSimpleClientset()
-			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
-			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
-			_ = CreateNamespace(clientset, "csi-powerstore")
-			_ = CreateNamespace(clientset, "ns-2")
-			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
-			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pstore.GetLogs(test.namespace, "true")
-			files, _ := ioutil.ReadDir(currentPath)
-			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace) {
-					tarCreated = true
-				}
-			}
-			if !tarCreated {
-				t.Errorf("tar creation not sucessfull.")
-			}
-			tarCreated = false
-		})
-	}
-
-	var pscale PowerScaleStruct
-	var pscaleTests = tests{
-		{"get logs of powerscale", "csi-powerscale", "pod1", "lease1", "tar file should be created"},
-	}
-	for _, test := range pscaleTests {
-		t.Run(test.description, func(t *testing.T) {
-			clientset = fake.NewSimpleClientset()
-			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
-			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
-			_ = CreateNamespace(clientset, "csi-powerscale")
-			_ = CreateNamespace(clientset, "ns-2")
-			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
-			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pscale.GetLogs(test.namespace, "true")
-			files, _ := ioutil.ReadDir(currentPath)
-			for _, file := range files {
-				if strings.Contains(file.Name(), test.namespace) {
-					tarCreated = true
-				}
-			}
-			if !tarCreated {
-				t.Errorf("tar creation not sucessfull.")
-			}
-			tarCreated = false
-		})
-	}
-
+	currentPath, _ := os.Getwd()
+	var tarCreated bool
 	var unity UnityStruct
 	var unityTests = tests{
 		{"get logs of unity", "csi-unity", "pod1", "lease1", "tar file should be created"},
@@ -487,6 +495,44 @@ func TestGetLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			unity.GetLogs(test.namespace, "true")
+			files, _ := ioutil.ReadDir(currentPath)
+			for _, file := range files {
+				if strings.Contains(file.Name(), test.namespace) {
+					tarCreated = true
+				}
+			}
+			if !tarCreated {
+				t.Errorf("tar creation not sucessfull.")
+			}
+			tarCreated = false
+		})
+	}
+}
+
+func TestPowerstoreLogs(t *testing.T){
+	type tests = []struct {
+		description string
+		namespace   string
+		podName     string
+		leaseName   string
+		expected    string
+	}
+	currentPath, _ := os.Getwd()
+	var tarCreated bool
+	var pstore PowerStoreStruct
+	var pstoreTests = tests{
+		{"get logs of powerstore", "csi-powerstore", "pod1", "lease1", "tar file should be created"},
+	}
+	for _, test := range pstoreTests {
+		t.Run(test.description, func(t *testing.T) {
+			clientset = fake.NewSimpleClientset()
+			_ = CreateNodes(clientset, "10.xx.xxx.xxx")
+			_ = CreateNodes(clientset, "11.xx.xxx.xxx")
+			_ = CreateNamespace(clientset, "csi-powerstore")
+			_ = CreateNamespace(clientset, "ns-2")
+			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
+			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
+			pstore.GetLogs(test.namespace, "true")
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
