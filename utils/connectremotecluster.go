@@ -20,11 +20,14 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
 // Logging object
 var remoteClusterLog, _ = GetLogger()
+
+var remoteClusterIPAddress string
 
 // GetLocalIP get the IP address of the current system
 func GetLocalIP() string {
@@ -35,8 +38,11 @@ func GetLocalIP() string {
 	for _, address := range addrs {
 		// check the address type and if it is not a loopback the display it
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
+			err := ipnet.IP.To4()
+			if err != nil {
 				return ipnet.IP.String()
+			} else {
+				remoteClusterLog.Fatal(err)
 			}
 		}
 	}
@@ -83,6 +89,7 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 
 // ScpConfigFile performs the operation to download the config file from remote cluster to container node
 func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUsername string, clusterPassword string) string {
+	remoteClusterIPAddress = clusterIPAddress
 	var (
 		err        error
 		sftpClient *sftp.Client
@@ -95,6 +102,10 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 	}
 	defer sftpClient.Close()
 
+	/*	************************************
+		COPY CONFIG FILE FROM REMOTE CLUSTER
+		************************************
+	*/
 	// remote file path and local directory path
 	var remoteFilePath = kubeconfigPath
 	var localDir = "."
@@ -119,6 +130,78 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 		remoteClusterLog.Fatal(err)
 	}
 
+	/*	**********************************************************
+		COPY DRIVERS' SECRET/CONFIG YAML FILES FROM REMOTE CLUSTER
+		**********************************************************
+	*/
+
+	secretFilePaths := GetSecretFilePath()
+	if len(secretFilePaths) > 0 {
+		for item := range secretFilePaths {
+			filePath := secretFilePaths[item]
+			localDirName := createDirectory("RemoteClusterSecretFiles")
+			
+			// open the source file
+			sourceFile, err := sftpClient.Open(filePath)
+			if err == nil {
+				// create the destination file
+				localFilePath := UpdateFileName(filePath)
+				localFileName := path.Base(localFilePath)				
+				destinationFile, err := os.Create(path.Join(localDirName, localFileName))
+				if err != nil {
+					remoteClusterLog.Fatal(err)
+				}
+				defer destinationFile.Close()
+			
+				// copy the local directory
+				if _, err = sourceFile.WriteTo(destinationFile); err != nil {
+					remoteClusterLog.Fatal(err)
+				}
+			} else {
+				remoteClusterLog.Infof("Content parsing skipped for the file %s, %s", filePath, err)
+			}
+			defer sourceFile.Close()
+		}
+	}
+
 	remoteClusterLog.Infof("Copy of %s file from remote server finished!", dstFile.Name())
 	return dstFile.Name()
+}
+
+func createDirectory(name string) (dirName string) {
+	_, err := os.Stat(name)
+
+	if os.IsNotExist(err) {
+		errDir := os.MkdirAll(name, 0777)
+		if errDir != nil {
+			remoteClusterLog.Fatalf("Error while creating directory: %s", err.Error())
+		}
+	}
+	return name
+}
+
+// UpdateFileName method suffixes the driver name along with secret/config file of driver
+func UpdateFileName(filePath string) string {
+	var secretFilePath string
+	if strings.Contains(filePath, "unity") {
+		str := strings.SplitN(filePath, ".", 2)
+		secretFilePath = str[0] + "-unity." + str[1]
+	}
+	if strings.Contains(filePath, "powerscale") {
+		str := strings.SplitN(filePath, ".", 2)
+		secretFilePath = str[0] + "-powerscale." + str[1]
+	}
+	if strings.Contains(filePath, "powerstore") {
+		str := strings.SplitN(filePath, ".", 2)
+		secretFilePath = str[0] + "-powerstore." + str[1]
+	}
+	if strings.Contains(filePath, "powermax") {
+		str := strings.SplitN(filePath, ".", 2)
+		secretFilePath = str[0] + "-powermax." + str[1]
+	}
+	if strings.Contains(filePath, "powerflex") {
+		str := strings.SplitN(filePath, ".", 2)
+		secretFilePath = str[0] + "-powerflex." + str[1]
+	}
+	return secretFilePath
 }

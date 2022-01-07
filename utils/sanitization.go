@@ -14,6 +14,7 @@
 package utils
 
 import (
+	// "csm-logcollector/csm"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -187,7 +188,6 @@ func PowermaxSecretContent(data map[interface{}]interface{}, sensitiveContentLis
 func PowerflexSecretContent(fileData string, sensitiveContentList []string) []string {
 	fileDataList := strings.Split(fileData, "\n")
 	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
-	sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)
 	for _, str := range fileDataList {
 		if containsKey(str, sensitiveKeyList) {
 			tempValue1 := strings.SplitN(str, "\"", 2)
@@ -225,7 +225,6 @@ func TypeConversion(arrayDetailsList []interface{}, sensitiveContentList []strin
 // IdentifySensitiveContent method performs the identification of sensitive content from specific drivers' secret file
 func IdentifySensitiveContent(arrayDetailsMap map[interface{}]interface{}, sensitiveContentList []string) []string {
 	sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
-	sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)
 	for key, value := range arrayDetailsMap {
 		k, ok := key.(string)
 		if !ok {
@@ -251,11 +250,42 @@ func contains(str string, list []string) bool {
 	return false
 }
 
+// GetRemoteSecretFiles reads the secret/config files of remote cluster from local directory
+func GetRemoteSecretFiles() []string {
+	var secretFilePaths []string
+	localDir := "RemoteClusterSecretFiles"
+	err := filepath.Walk(localDir, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            fmt.Println(err)
+            return err
+        }
+		if !info.IsDir() {
+			fp, _ := filepath.Abs(path)
+			secretFilePaths = append(secretFilePaths, fp)
+		}
+		return nil
+    })
+    if err != nil {
+        fmt.Println(err)
+    }
+	return secretFilePaths
+}
+
 // PerformSanitization method performs the sanitization of all logs files against the sensitive strings identified
 func PerformSanitization(namespaceDirectoryName string) bool {
-	secretFilePaths := GetSecretFilePath()
+	var secretFilePaths []string
 	var maskingFlag = false
-	if len(secretFilePaths) != 0 {
+	// verify current system IP
+	// container node amd master node are same machine
+	currentIPAddress := GetLocalIP()
+	if currentIPAddress == remoteClusterIPAddress {
+		secretFilePaths = GetSecretFilePath()
+	} else {
+		secretFilePaths = GetRemoteSecretFiles()
+	}
+	if len(secretFilePaths) > 0 {
+		sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
+		sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)
 		sensitiveContentList := ReadSecretFileContent(secretFilePaths)
 		err := filepath.Walk(namespaceDirectoryName, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -304,6 +334,6 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 		} else {
 			fmt.Printf("No sensitive content identified.\n")
 		}
-	}
+	}	
 	return maskingFlag
 }

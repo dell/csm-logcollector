@@ -488,6 +488,9 @@ func createTarball(source string, target string) error {
 	}
 
 	fmt.Println("Archive created successfully")
+
+	// cleanup call
+	cleanup()
 	return nil
 }
 
@@ -518,4 +521,22 @@ func copy(src, dst string) {
 		snsLog.Fatalf("Copying the contents of file failed with error: %s", err.Error())
 	}
 	snsLog.Debugf("log file added to Dir. Copied %d  bytes", nBytes)
+}
+
+func cleanup() {
+	_, err1 := os.Stat("config")
+	_, err2 := os.Stat("RemoteClusterSecretFiles")
+
+	if err1 == nil || err2 == nil {
+		snsLog.Infof("Cleanup started.")
+		e1 := os.Remove("config")
+		if e1 != nil {
+			snsLog.Fatal(e1)
+		}
+		e2 := os.RemoveAll("RemoteClusterSecretFiles")
+		if e2 != nil {
+			snsLog.Fatal(e2)
+		}
+		snsLog.Infof("Cleanup completed.")
+	}
 }
