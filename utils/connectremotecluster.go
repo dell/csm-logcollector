@@ -224,7 +224,7 @@ func UpdateFileName(filePath string) string {
 	return secretFilePath
 }
 
-// GetLocalIP get the IP address of the remote cluster
+// GetRemoteClusterIP get the IP address of the remote cluster
 func GetRemoteClusterIP() string {
 	var ipAddrr string
 	_, err := os.Stat("config.yml")
@@ -240,7 +240,7 @@ func GetRemoteClusterIP() string {
 			remoteClusterLog.Fatalf("Unmarshalling configuration file failed with error %v", err)
 		}
 
-		for k, _ := range data {
+		for k := range data {
 			if k == "kubeconfig_details" {
 				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
 				kubeconfigDetails, ok := data["kubeconfig_details"].(map[interface{}]interface{})
