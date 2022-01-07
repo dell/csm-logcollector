@@ -73,7 +73,7 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 	// Perform sanitization
 	ok := utils.PerformSanitization(namespaceDirectoryName)
 	if !ok {
-		unityLog.Infof("Sanitization not performed for %s driver.", namespace)
+		unityLog.Warnf("Sanitization not performed for %s driver.", namespace)
 	}
 
 	errMsg := createTarball(namespaceDirectoryName, ".")

@@ -79,7 +79,10 @@ func SetClientSetFromConfig() kubernetes.Interface {
 		if clientset == nil {
 			var kubeconfig *string
 			ReadConfigFile()
-			currentIPAddress := utils.GetLocalIP()
+			currentIPAddress, err := utils.GetLocalIP()
+			if err != nil {
+				snsLog.Fatal(err)
+			}
 			snsLog.Infof("Current node IP: %s", currentIPAddress)
 
 			// verify current system IP
@@ -531,11 +534,11 @@ func cleanup() {
 		snsLog.Infof("Cleanup started.")
 		e1 := os.Remove("config")
 		if e1 != nil {
-			snsLog.Fatal(e1)
+			snsLog.Infof("Error: %s", e1)
 		}
 		e2 := os.RemoveAll("RemoteClusterSecretFiles")
 		if e2 != nil {
-			snsLog.Fatal(e2)
+			snsLog.Infof("Error: %s", e2)
 		}
 		snsLog.Infof("Cleanup completed.")
 	}

@@ -69,11 +69,11 @@ func GetSecretFilePath() []string {
 						secretFilePaths = append(secretFilePaths, secretFilePath)
 					}
 				} else {
-					sanityLog.Infof("driver_path sub-key for %s is empty. Hence it's secret file can't be obtained.", key)
+					sanityLog.Warnf("driver_path sub-key for %s is empty. Hence it's secret file can't be obtained.", key)
 				}
 			}
 		} else {
-			sanityLog.Info("'driver_path' key not found in config.yml.")
+			sanityLog.Warn("'driver_path' key not found in config.yml.")
 		}
 	}
 	return secretFilePaths
@@ -255,19 +255,19 @@ func GetRemoteSecretFiles() []string {
 	var secretFilePaths []string
 	localDir := "RemoteClusterSecretFiles"
 	err := filepath.Walk(localDir, func(path string, info os.FileInfo, err error) error {
-        if err != nil {
-            fmt.Println(err)
-            return err
-        }
+		if err != nil {
+			sanityLog.Warn(err)
+			return err
+		}
 		if !info.IsDir() {
 			fp, _ := filepath.Abs(path)
 			secretFilePaths = append(secretFilePaths, fp)
 		}
 		return nil
-    })
-    if err != nil {
-        fmt.Println(err)
-    }
+	})
+	if err != nil {
+		sanityLog.Warn(err)
+	}
 	return secretFilePaths
 }
 
@@ -277,7 +277,10 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 	var maskingFlag = false
 	// verify current system IP
 	// container node amd master node are same machine
-	currentIPAddress := GetLocalIP()
+	currentIPAddress, err := GetLocalIP()
+	if err != nil {
+		sanityLog.Fatalf("Error: %s", err)
+	}
 	if currentIPAddress == remoteClusterIPAddress {
 		secretFilePaths = GetSecretFilePath()
 	} else {
@@ -289,7 +292,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 		sensitiveContentList := ReadSecretFileContent(secretFilePaths)
 		err := filepath.Walk(namespaceDirectoryName, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Println(err)
+				sanityLog.Info(err)
 				return err
 			}
 			if !info.IsDir() {
@@ -327,13 +330,13 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 			return nil
 		})
 		if err != nil {
-			fmt.Println(err)
+			sanityLog.Infof("Error: %s", err)
 		}
 		if maskingFlag {
 			fmt.Printf("Masking sensitive content completed.\n")
 		} else {
 			fmt.Printf("No sensitive content identified.\n")
 		}
-	}	
+	}
 	return maskingFlag
 }

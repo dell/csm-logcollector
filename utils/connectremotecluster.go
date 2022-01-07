@@ -30,23 +30,41 @@ var remoteClusterLog, _ = GetLogger()
 var remoteClusterIPAddress string
 
 // GetLocalIP get the IP address of the current system
-func GetLocalIP() string {
-	addrs, err := net.InterfaceAddrs()
+func GetLocalIP() (string, error) {
+	ifaces, err := net.Interfaces()
 	if err != nil {
-		return ""
+		return "", err
 	}
-	for _, address := range addrs {
-		// check the address type and if it is not a loopback the display it
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			err := ipnet.IP.To4()
-			if err != nil {
-				return ipnet.IP.String()
-			} else {
-				remoteClusterLog.Fatal(err)
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
 			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			return ip.String(), nil
 		}
 	}
-	return ""
+	return "", err
 }
 
 // Connect method creates a connection with the remote cluster
@@ -98,7 +116,7 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 	// change to the actual SSH connection user name, password, host name or IP, SSH port
 	sftpClient, err = Connect(clusterUsername, clusterPassword, clusterIPAddress, 22)
 	if err != nil {
-		remoteClusterLog.Fatal(err)
+		remoteClusterLog.Fatalf("Error: %s", err)
 	}
 	defer sftpClient.Close()
 
@@ -113,7 +131,7 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 	// open the source file
 	srcFile, err := sftpClient.Open(remoteFilePath)
 	if err != nil {
-		remoteClusterLog.Fatal(err)
+		remoteClusterLog.Fatalf("Error: %s", err)
 	}
 	defer srcFile.Close()
 
@@ -121,13 +139,13 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 	var localFileName = path.Base(remoteFilePath)
 	dstFile, err := os.Create(path.Join(localDir, localFileName))
 	if err != nil {
-		remoteClusterLog.Fatal(err)
+		remoteClusterLog.Fatalf("Error: %s", err)
 	}
 	defer dstFile.Close()
 
 	// copy the local directory
 	if _, err = srcFile.WriteTo(dstFile); err != nil {
-		remoteClusterLog.Fatal(err)
+		remoteClusterLog.Fatalf("Error: %s", err)
 	}
 
 	/*	**********************************************************
@@ -140,22 +158,22 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 		for item := range secretFilePaths {
 			filePath := secretFilePaths[item]
 			localDirName := createDirectory("RemoteClusterSecretFiles")
-			
+
 			// open the source file
 			sourceFile, err := sftpClient.Open(filePath)
 			if err == nil {
 				// create the destination file
 				localFilePath := UpdateFileName(filePath)
-				localFileName := path.Base(localFilePath)				
+				localFileName := path.Base(localFilePath)
 				destinationFile, err := os.Create(path.Join(localDirName, localFileName))
 				if err != nil {
-					remoteClusterLog.Fatal(err)
+					remoteClusterLog.Fatalf("Error: %s", err)
 				}
 				defer destinationFile.Close()
-			
+
 				// copy the local directory
 				if _, err = sourceFile.WriteTo(destinationFile); err != nil {
-					remoteClusterLog.Fatal(err)
+					remoteClusterLog.Fatalf("Error: %s", err)
 				}
 			} else {
 				remoteClusterLog.Infof("Content parsing skipped for the file %s, %s", filePath, err)
