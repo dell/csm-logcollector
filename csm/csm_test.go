@@ -2,8 +2,12 @@ package csm
 
 import (
 	"context"
-	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,9 +15,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	describe "k8s.io/kubectl/pkg/describe"
-	"os"
-	"strings"
-	"testing"
 )
 
 func CreatePod(clientset kubernetes.Interface, namespace string, name string, containerName string) *v1.Pod {
@@ -355,7 +356,7 @@ func TestGetNodes(t *testing.T) {
 	}
 }
 
-func TestPowermaxLogs(t *testing.T){
+func TestPowermaxLogs(t *testing.T) {
 	type tests = []struct {
 		description string
 		namespace   string
@@ -393,7 +394,7 @@ func TestPowermaxLogs(t *testing.T){
 	}
 }
 
-func TestPowerscaleLogs(t *testing.T){
+func TestPowerscaleLogs(t *testing.T) {
 	type tests = []struct {
 		description string
 		namespace   string
@@ -432,7 +433,7 @@ func TestPowerscaleLogs(t *testing.T){
 
 }
 
-func TestPowerflexLogs(t *testing.T){
+func TestPowerflexLogs(t *testing.T) {
 	type tests = []struct {
 		description string
 		namespace   string
@@ -471,7 +472,7 @@ func TestPowerflexLogs(t *testing.T){
 	}
 }
 
-func TestUnityLogs(t *testing.T){
+func TestUnityLogs(t *testing.T) {
 	type tests = []struct {
 		description string
 		namespace   string
@@ -509,7 +510,7 @@ func TestUnityLogs(t *testing.T){
 	}
 }
 
-func TestPowerstoreLogs(t *testing.T){
+func TestPowerstoreLogs(t *testing.T) {
 	type tests = []struct {
 		description string
 		namespace   string
