@@ -281,11 +281,15 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 	if err != nil {
 		sanityLog.Fatalf("Error: %s", err)
 	}
+	remoteClusterIPAddress := GetRemoteClusterIP()
+	sanityLog.Infof("currentIPAddress: %s", currentIPAddress)
+	sanityLog.Infof("remoteClusterIPAddress: %s", remoteClusterIPAddress)
 	if currentIPAddress == remoteClusterIPAddress {
 		secretFilePaths = GetSecretFilePath()
 	} else {
 		secretFilePaths = GetRemoteSecretFiles()
 	}
+	sanityLog.Infof("secretFilePaths: %s", secretFilePaths)
 	if len(secretFilePaths) > 0 {
 		sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
 		sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)

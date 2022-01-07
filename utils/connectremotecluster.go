@@ -17,17 +17,18 @@ import (
 	"fmt"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"io/ioutil"
 	"net"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Logging object
 var remoteClusterLog, _ = GetLogger()
-
-var remoteClusterIPAddress string
 
 // GetLocalIP get the IP address of the current system
 func GetLocalIP() (string, error) {
@@ -107,7 +108,6 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 
 // ScpConfigFile performs the operation to download the config file from remote cluster to container node
 func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUsername string, clusterPassword string) string {
-	remoteClusterIPAddress = clusterIPAddress
 	var (
 		err        error
 		sftpClient *sftp.Client
@@ -222,4 +222,49 @@ func UpdateFileName(filePath string) string {
 		secretFilePath = str[0] + "-powerflex." + str[1]
 	}
 	return secretFilePath
+}
+
+// GetLocalIP get the IP address of the remote cluster
+func GetRemoteClusterIP() string {
+	var ipAddrr string
+	_, err := os.Stat("config.yml")
+	if err == nil {
+		yamlFile, err := ioutil.ReadFile("config.yml")
+		if err != nil {
+			remoteClusterLog.Fatalf("Reading configuration file failed with error %v ", err)
+		}
+
+		data := make(map[interface{}]interface{})
+		err = yaml.Unmarshal(yamlFile, data)
+		if err != nil {
+			remoteClusterLog.Fatalf("Unmarshalling configuration file failed with error %v", err)
+		}
+
+		for k, _ := range data {
+			if k == "kubeconfig_details" {
+				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
+				kubeconfigDetails, ok := data["kubeconfig_details"].(map[interface{}]interface{})
+				if !ok {
+					remoteClusterLog.Fatalf("kubeconfig_details is not a map!")
+				}
+
+				for key, value := range kubeconfigDetails {
+					// type assertion from interface{} type to string type
+					key, ok1 := key.(string)
+					value, ok2 := value.(string)
+					if !ok1 || !ok2 {
+						remoteClusterLog.Fatalf("key/value is not string!")
+					}
+					if len(strings.TrimSpace(value)) != 0 {
+						if key == "ip_address" {
+							ipAddrr = value
+						}
+					} else {
+						remoteClusterLog.Fatalf("No value found for kubeconfig_details sub-key: %s", key)
+					}
+				}
+			}
+		}
+	}
+	return ipAddrr
 }
