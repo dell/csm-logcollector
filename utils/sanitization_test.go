@@ -5,9 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
-	// "path/filepath"
-	// "regexp"
-
+	
 	"gopkg.in/yaml.v2"
 	"github.com/google/go-cmp/cmp"
 	"testing"
@@ -124,6 +122,43 @@ func TestPowerscaleSecretContent(t *testing.T) {
 	}
 }
 
+func TestPowerflexSecretContent(t *testing.T) {
+	filePath := "test_data/powerflex_secret_data.yaml"
+	_, err := os.Stat(filePath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileContent, err := ioutil.ReadFile(filePath)
+	fileData := string(fileContent)
+	type tests = []struct {
+		description string
+		fileData string
+		sensitiveContentList []string
+		expectedContentList []string
+	}
+
+	var secretContentTests = tests{
+		{
+			"PowerscaleSecretContent positive", fileData,
+			[]string{},
+			[]string{"10.0.0.3,10.0.0.4", "ID2", "https://1.2.3.4", "sample_password", "sample_user",},
+		},
+	}
+
+	for _, test := range secretContentTests {
+		t.Run(test.description, func(t *testing.T) {
+		    // Check for powerflex secret content
+			powerflexActual := PowerflexSecretContent(test.fileData, test.sensitiveContentList)
+			sort.Strings(powerflexActual)
+			sort.Strings(test.expectedContentList)
+			if diff := cmp.Diff(powerflexActual, test.expectedContentList); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedContentList, diff)
+				return
+			}
+		})
+	}
+}
+
 func TestUnitySecretContent(t *testing.T) {
 	filePath := "test_data/unity_secret_data.yaml"
 	_, err := os.Stat(filePath)
@@ -179,9 +214,12 @@ func TestReadSecretFileContent(t *testing.T){
 				"test_data/powerscale_secret_data.yaml",
 				"test_data/unity_secret_data.yaml",
 				"test_data/powermax_secret_data.yaml",
+				"test_data/powerflex_secret_data.yaml",
 			},
-			[]string{"1.2.3.4", "ABC00000000002", "bm90X3RoZV91c2VybmFtZQ==", "bm90X3RoZV9wYXNzd29yZA==", "cluster2",
-					 "https://1.2.3.5/", "password", "password", "sample_password", "sample_user", "unique", "user", "user",},
+			[]string{"1.2.3.4", "10.0.0.3,10.0.0.4", "ABC00000000002", "ID2", "bm90X3RoZV91c2VybmFtZQ==",
+					 "bm90X3RoZV9wYXNzd29yZA==", "cluster2", "https://1.2.3.4", "https://1.2.3.5/", "password",
+					 "password", "sample_password", "sample_password", "sample_user", "sample_user", "unique",
+					 "user", "user",},
 		},
 	}
 	for _, test := range readSecretTests {
@@ -198,26 +236,26 @@ func TestReadSecretFileContent(t *testing.T){
 	}
 }
 
-func Testcontains(t *testing.T) {
+func TestContains(t *testing.T) {
 	value := "powermax_secret_data"
 	t.Run("String present in the list", func(t *testing.T) {
-		actual_flag := contains(value ,  []string{
+		actualFlag := contains(value ,  []string{
 			"powerstore_secret_data",
 			"powerscale_secret_data",
 			"unity_secret_data",
 			"powermax_secret_data"})
-		if !actual_flag {
+		if !actualFlag {
 			t.Errorf("string not in the list of strings")
 			return
 		}
 	})
 	t.Run("String not present in the list", func(t *testing.T) {
-		actual_flag := contains("invalid value" , []string{
+		actualFlag := contains("invalid value" , []string{
 			"powerstore_secret_data",
 			"powerscale_secret_data",
 			"unity_secret_data",
 			"powermax_secret_data"})
-		if actual_flag {
+		if actualFlag {
 			t.Errorf("string in the list of strings")
 			return
 		}

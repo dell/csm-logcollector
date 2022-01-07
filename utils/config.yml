@@ -1,3 +1,5 @@
+# This config.yml is consumed for unit testing.
+#Hence, This config file contains only dummy values.
 kubeconfig_details:
   path: "/root/.kube/config"
   ip_address: "xxx.xxx.xxx.xxx"
