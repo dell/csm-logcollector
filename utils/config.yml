@@ -1,0 +1,12 @@
+kubeconfig_details:
+  path: "/root/.kube/config"
+  ip_address: "xxx.xxx.xxx.xxx"
+  username: "sample_user"
+  password: "sample_password"
+destination_path: "/root/"
+driver_path:
+  csi-unity: "/root/csi-unity"
+  csi-powerstore: "/root/csi-powerstore"
+  csi-powerscale: "/root/csi-powerscale"
+  csi-powermax: "/root/csi-powermax"
+  csi-powerflex: "/root/csi-powerflex"
