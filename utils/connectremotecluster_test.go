@@ -76,9 +76,7 @@ func TestCreateDirectory(t *testing.T) {
 			}
 		} else {
 			currentPath, _ := os.Getwd()
-			os.RemoveAll(currentPath+"/sample_directory")
+			os.RemoveAll(currentPath + "/sample_directory")
 		}
-
 	})
-
 }
