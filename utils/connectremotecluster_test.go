@@ -75,7 +75,8 @@ func TestCreateDirectory(t *testing.T) {
 				t.Errorf("Directory do not exist")
 			}
 		} else {
-			os.RemoveAll("/root/srinivas/connect_units/csm-logcollector/utils/sample_directory")
+			currentPath, _ := os.Getwd()
+			os.RemoveAll(currentPath+"/sample_directory")
 		}
 
 	})
