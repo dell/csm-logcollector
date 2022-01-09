@@ -6,9 +6,10 @@ import (
 	"os"
 	"sort"
 
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
-	"testing"
 )
 
 func TestGetSecretFilePath(t *testing.T) {
@@ -178,7 +179,6 @@ func TestUnitySecretContent(t *testing.T) {
 		{
 			"unitySecretContent positive", data,
 			[]string{},
-			// []string{},
 			[]string{"ABC00000000002", "user", "password", "https://1.2.3.5/"},
 		},
 	}
