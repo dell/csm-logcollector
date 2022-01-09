@@ -1,9 +1,11 @@
+# This config.yml is consumed for unit testing.
+#Hence, This config file contains only dummy values.
 kubeconfig_details:
   path: "/root/.kube/config"
-  ip_address: "10.247.66.65"
-  username: "root"
-  password: "dangerous"
-destination_path: "/home"
+  ip_address: "xxx.xxx.xxx.xxx"
+  username: "sample_user"
+  password: "sample_password"
+destination_path: "/root/"
 driver_path:
   csi-unity: "/root/csi-unity"
   csi-powerstore: "/root/csi-powerstore"

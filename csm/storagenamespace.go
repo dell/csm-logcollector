@@ -68,6 +68,9 @@ type StorageNameSpaceStruct struct {
 var once sync.Once
 var destinationPath string
 var kubeconfigPath string
+var clusterIPAddress string
+var clusterUsername string
+var clusterPassword string
 var clientset kubernetes.Interface
 
 // SetClientSetFromConfig creates ClientSet object
@@ -76,11 +79,26 @@ func SetClientSetFromConfig() kubernetes.Interface {
 		if clientset == nil {
 			var kubeconfig *string
 			ReadConfigFile()
-			if kubeconfigPath != "" {
-				kubeconfig = flag.String("kubeconfig", kubeconfigPath, "absolute path to the kubeconfig file")
+			currentIPAddress, err := utils.GetLocalIP()
+			if err != nil {
+				snsLog.Fatal(err)
+			}
+			snsLog.Infof("Current node IP: %s", currentIPAddress)
+
+			// verify current system IP
+			// container node amd master node are same machine
+			if currentIPAddress == clusterIPAddress {
+				if kubeconfigPath != "" {
+					kubeconfig = flag.String("kubeconfig", kubeconfigPath, "absolute path to the kubeconfig file")
+				} else {
+					home := homedir.HomeDir()
+					kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+				}
+				// container node amd master node are different machines
 			} else {
-				home := homedir.HomeDir()
-				kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+				// SCP config file from remote node to container node
+				remoteKubeconfigPath := utils.ScpConfigFile(kubeconfigPath, clusterIPAddress, clusterUsername, clusterPassword)
+				kubeconfig = flag.String("kubeconfig", remoteKubeconfigPath, "absolute path to the kubeconfig file")
 			}
 			flag.Parse()
 
@@ -202,7 +220,7 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 	fmt.Printf("\tNamespace: \t%s\n", s.namespaceName)
 	fmt.Printf("\tDriver name: \t%s\n", s.drivername)
 	fmt.Printf("\tDriver version: %s\n", s.driverversion)
-	snsLog.Debugf("Driver detailes listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
+	snsLog.Debugf("Driver details listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
 	return namespace, driverName, driverVersion
 }
 
@@ -223,7 +241,7 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 			fmt.Printf("\t%s\n", lease.Name)
 			fmt.Printf("\t%s\n", lease.Namespace)
 			fmt.Printf("\t%s\n", *lease.Spec.HolderIdentity) // Points to same controller pod for all instances
-			snsLog.Debugf("Lease pod detailes: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
+			snsLog.Debugf("Lease pod details: %s, %s, %s", lease.Name, lease.Namespace, *lease.Spec.HolderIdentity)
 			fmt.Println()
 			holder = *lease.Spec.HolderIdentity
 		}
@@ -348,10 +366,37 @@ func ReadConfigFile() {
 				snsLog.Infof("destination path: %s", destinationPath)
 			}
 
-			if k == "kubeconfig_path" {
-				kubeconfigPath = fmt.Sprintf("%s", v)
-				snsLog.Infof("kubeconfig path: %s", kubeconfigPath)
+			if k == "kubeconfig_details" {
+				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
+				kubeconfigDetails, ok := data["kubeconfig_details"].(map[interface{}]interface{})
+				if !ok {
+					snsLog.Fatalf("kubeconfig_details is not a map!")
+				}
 
+				for key, value := range kubeconfigDetails {
+					// type assertion from interface{} type to string type
+					key, ok1 := key.(string)
+					value, ok2 := value.(string)
+					if !ok1 || !ok2 {
+						snsLog.Fatalf("key/value is not string!")
+					}
+					if len(strings.TrimSpace(value)) != 0 {
+						if key == "path" {
+							kubeconfigPath = value
+						}
+						if key == "ip_address" {
+							clusterIPAddress = value
+						}
+						if key == "username" {
+							clusterUsername = value
+						}
+						if key == "password" {
+							clusterPassword = value
+						}
+					} else {
+						snsLog.Infof("No value found for kubeconfig_details sub-key: %s", key)
+					}
+				}
 			}
 		}
 	}
@@ -446,6 +491,9 @@ func createTarball(source string, target string) error {
 	}
 
 	fmt.Println("Archive created successfully")
+
+	// cleanup call
+	cleanup()
 	return nil
 }
 
@@ -476,4 +524,22 @@ func copy(src, dst string) {
 		snsLog.Fatalf("Copying the contents of file failed with error: %s", err.Error())
 	}
 	snsLog.Debugf("log file added to Dir. Copied %d  bytes", nBytes)
+}
+
+func cleanup() {
+	_, err1 := os.Stat("config")
+	_, err2 := os.Stat("RemoteClusterSecretFiles")
+
+	if err1 == nil || err2 == nil {
+		snsLog.Infof("Cleanup started.")
+		e1 := os.Remove("config")
+		if e1 != nil {
+			snsLog.Infof("Error: %s", e1)
+		}
+		e2 := os.RemoveAll("RemoteClusterSecretFiles")
+		if e2 != nil {
+			snsLog.Infof("Error: %s", e2)
+		}
+		snsLog.Infof("Cleanup completed.")
+	}
 }

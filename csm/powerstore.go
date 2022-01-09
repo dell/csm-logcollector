@@ -98,6 +98,12 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string) {
 		}
 	}
 
+	// Perform sanitization
+	ok := utils.PerformSanitization(namespaceDirectoryName)
+	if !ok {
+		psLog.Warnf("Sanitization not performed for %s driver.", namespace)
+	}
+
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {

@@ -55,7 +55,7 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 			}
 		}
 
-		pflxLog.Infof("sdc-monitor container is deployed successfully: %t", flag)
+		pflxLog.Infof("sdc-monitor container is deployed successfully: %t for %s", flag, pod.Name)
 	}
 
 	for container := range pod.Spec.Containers {
@@ -101,7 +101,7 @@ func (p PowerFlexStruct) GetNonRunningPods(namespaceDirectoryName string, pod *c
 			}
 		}
 
-		pflxLog.Infof("sdc-monitor container is deployed successfully: %t", flag)
+		pflxLog.Infof("sdc-monitor container is deployed successfully: %t for %s", flag, pod.Name)
 	}
 
 	for container := range pod.Spec.Containers {
@@ -147,13 +147,17 @@ func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string) {
 			if pod.Status.Phase == RunningPodState {
 				p.GetRunningPods(namespaceDirectoryName, &pod)
 				fmt.Println("\t*************************************************************")
-				pflxLog.Infof("Logs collected for runningpods of %s", namespace)
 			} else {
 				p.GetNonRunningPods(namespaceDirectoryName, &pod)
 				fmt.Println("\t*************************************************************")
-				pflxLog.Infof("Logs collected for non-runningpods of %s", namespace)
 			}
 		}
+	}
+
+	// Perform sanitization
+	ok := utils.PerformSanitization(namespaceDirectoryName)
+	if !ok {
+		pflxLog.Warnf("Sanitization not performed for %s driver.", namespace)
 	}
 
 	errMsg := createTarball(namespaceDirectoryName, ".")
