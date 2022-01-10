@@ -34,6 +34,20 @@ For any CSM log collector issues, questions or feedback, please follow our [supp
 
     go mod tidy
 
+## Configuration
+  1. The config.yml contains configuration details related to Kubernetes cluster, path where tarball is to be copied and CSI driver path.
+
+  2. <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. Mandatory parameter while connecting to remote Kubernetes cluster.
+
+  3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter.
+
+  4. <b>driver_path</b>: Path where CSI repo is cloned for respective storage platform. This is optional field. If not provided, log sanitization will be skipped. It can include following sub-fields.
+      * csi-unity: CSI repo path for Unity.
+      * csi-powerstore: CSI repo path for PowerStore.
+      * csi-powerscale: CSI repo path for PowerScale.
+      * csi-powermax: CSI repo path for PowerMax.
+      * csi-powerflex: CSI repo path for PowerFlex.
+
 ## Using Application
   1. Once the dependencies are installed, run the following command:
 
