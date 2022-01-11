@@ -35,13 +35,17 @@ For any CSM log collector issues, questions or feedback, please follow our [supp
     go mod tidy
 
 ## Configuration
-  1. The config.yml contains configuration details related to Kubernetes cluster, path where tarball is to be copied and CSI driver path.
+  1. The config.yml contains configuration details related to Kubernetes cluster, path where tarball is to be copied and CSI driver path. The config.yml should be located at the root folder of the application.
 
-  2. <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. Mandatory parameter while connecting to remote Kubernetes cluster.
+  2. <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. Mandatory parameter while connecting to remote Kubernetes cluster. It can include following sub-fields.
+      * path: The path of the kubeconfig file. If not specified, by default, application will look for config file at <home_directory_of_user>/.kube folder.
+      * ip_address: The IP address of the remote Kubernetes cluster.
+      * username: The username required to connect to the remote Kubernetes cluster.
+      * password: The password required to connect to the remote Kubernetes cluster.
 
   3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter.
 
-  4. <b>driver_path</b>: Path where CSI repo is cloned for respective storage platform. This is optional field. If not provided, log sanitization will be skipped. It can include following sub-fields.
+  4. <b>driver_path</b>: Path where CSI driver repo is installed in the users system for the respective storage platform. This path will help to identify the relative path to the particular drivers secret file, which is utilized for log content sanitization. This is optional field. If not provided, log sanitization will be skipped. It can include following sub-fields.
       * csi-unity: CSI repo path for Unity.
       * csi-powerstore: CSI repo path for PowerStore.
       * csi-powerscale: CSI repo path for PowerScale.
