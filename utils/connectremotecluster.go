@@ -178,7 +178,9 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 			} else {
 				remoteClusterLog.Infof("Content parsing skipped for the file %s, %s", filePath, err)
 			}
-			defer sourceFile.Close()
+			if sourceFile != nil {
+				defer sourceFile.Close()
+			}
 		}
 	}
 
