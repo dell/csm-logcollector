@@ -1,8 +1,8 @@
 kubeconfig_details:
   path: "/root/.kube/config"
-  ip_address: "10.247.66.65"
+  ip_address: "10.xxx.xx.xx"
   username: "root"
-  password: "dangerous"
+  password: "xxxxxxxx"
 destination_path: "/home"
 driver_path:
   csi-unity: "/root/csi-unity"
