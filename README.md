@@ -25,40 +25,59 @@ Dell EMC Container Storage Modules (CSM) Log Collector is an open-source applica
 For any CSM log collector issues, questions or feedback, please follow our [support process](https://github.com/dell/csm/blob/main/docs/SUPPORT.md)
 
 ## Installing Application
-  1. Clone the repo using the command:
+ 
+  1. To install through docker image, please follow the below mentioned steps.
+
+    docker pull amaas-eos-mw1.cec.lab.emc.com:5092/csm-logcollector:v1.0.0
+
+  2. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
+  config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+
+  3. Alternatively, Clone the repo using the command:
 
     git clone https://github.com/dell/csm-logcollector/tree/1.0.0
 
-  2. Go to the root directory of go.mod .
-  3. Execute the following command to install dependencies:
+  4. Go to the root directory of go.mod
+
+  5. Execute the following command to install run-time dependencies:
 
     go mod tidy
 
-## Configuration
-  1. The config.yml contains configuration details related to Kubernetes cluster, path where tarball is to be copied and CSI driver path. The config.yml should be located at the root folder of the application.
+  6. To execute the application, please refer [Using Application](#using-application) section.
 
-  2. <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. Mandatory parameter while connecting to remote Kubernetes cluster. It can include following sub-fields.
-      * path: The path of the kubeconfig file. If not specified, by default, application will look for config file at <home_directory_of_user>/.kube folder.
+  <b>Note</b>: <br>
+  Currently, it is available on the internal registry. We will point it to docker hub, once it is available.
+
+## Configuration
+  1. The config.yml contains generic configuration which are necessary to execute the application.
+  
+  2. The config.yml should be located at the root folder of the application.
+  Each item in this file is described as below. 
+
+  3. <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. It is mandatory parameter which specifies the details about remote Kubernetes cluster. It includes following sub-fields.
+      * path: The absolute path of the Kubernetes config file. If not specified, by default, application will look for config file at <home_directory_of_user>/.kube folder.
       * ip_address: The IP address of the remote Kubernetes cluster.
       * username: The username required to connect to the remote Kubernetes cluster.
       * password: The password required to connect to the remote Kubernetes cluster.
 
   3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter.
 
-  4. <b>driver_path</b>: Path where CSI driver repo is installed in the users system for the respective storage platform. This path will help to identify the relative path to the particular drivers secret file, which is utilized for log content sanitization. This is optional field. If not provided, log sanitization will be skipped. It can include following sub-fields.
-      * csi-unity: CSI repo path for Unity.
-      * csi-powerstore: CSI repo path for PowerStore.
-      * csi-powerscale: CSI repo path for PowerScale.
-      * csi-powermax: CSI repo path for PowerMax.
-      * csi-powerflex: CSI repo path for PowerFlex.
+  4. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field. If not provided, log sanitization will be skipped. It includes following sub-fields.
+      * csi-unity: CSI driver path for Unity.
+      * csi-powerstore: CSI driver path for PowerStore.
+      * csi-powerscale: CSI driver path for PowerScale.
+      * csi-powermax: CSI driver path for PowerMax.
+      * csi-powerflex: CSI driver path for PowerFlex.
 
 ## Using Application
-  1. Once the dependencies are installed, run the following command:
+  1. To run the application in the container, navigate to the root folder and run the following command:
+
+    ./csm-logcollector
+
+  2. If the repo is cloned from the source, run the following command:
 
     go run main.go
 
-## Runtime Dependencies
-<b>client-go</b> library is needed to use the application.
 
 ## About
 
