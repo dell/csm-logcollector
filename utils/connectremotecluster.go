@@ -108,7 +108,7 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 
 // ScpConfigFile performs the operation to download the config file from remote cluster to container node
 func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUsername string, clusterPassword string, destinationPath string) string {
-	var dstinationFileName string
+	var dstinationFileName = ""
 	isCopied := false
 	var (
 		err        error
@@ -159,10 +159,8 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 	}
 	if isCopied {
 		remoteClusterLog.Infof("Copy of %s file from remote server finished!", kubeconfigPath)
-		return dstinationFileName
-	} else {
-		return ""
 	}
+	return dstinationFileName
 
 }
 
