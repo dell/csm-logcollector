@@ -97,7 +97,7 @@ func SetClientSetFromConfig() kubernetes.Interface {
 				// container node amd master node are different machines
 			} else {
 				// SCP config file from remote node to container node
-				remoteKubeconfigPath := utils.ScpConfigFile(kubeconfigPath, clusterIPAddress, clusterUsername, clusterPassword)
+				remoteKubeconfigPath := utils.ScpConfigFile(kubeconfigPath, clusterIPAddress, clusterUsername, clusterPassword, ".")
 				kubeconfig = flag.String("kubeconfig", remoteKubeconfigPath, "absolute path to the kubeconfig file")
 			}
 			flag.Parse()
