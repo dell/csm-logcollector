@@ -275,20 +275,23 @@ func GetRemoteSecretFiles() []string {
 func PerformSanitization(namespaceDirectoryName string) bool {
 	var secretFilePaths []string
 	var maskingFlag = false
-	// verify current system IP
-	// container node amd master node are same machine
+	secretFilePaths = GetSecretFilePath()
+
 	currentIPAddress, err := GetLocalIP()
 	if err != nil {
 		sanityLog.Fatalf("Error: %s", err)
 	}
-	remoteClusterIPAddress := GetRemoteClusterIP()
-	sanityLog.Infof("currentIPAddress: %s", currentIPAddress)
-	sanityLog.Infof("remoteClusterIPAddress: %s", remoteClusterIPAddress)
-	if currentIPAddress == remoteClusterIPAddress {
-		secretFilePaths = GetSecretFilePath()
-	} else {
-		secretFilePaths = GetRemoteSecretFiles()
+	remoteClusterIPAddress, clusterUsername, clusterPassword := GetRemoteClusterDetails()
+	if currentIPAddress != remoteClusterIPAddress {
+		if len(secretFilePaths) > 0 {
+			localDirName := createDirectory("RemoteClusterSecretFiles")
+			for item := range secretFilePaths {
+				ScpConfigFile(secretFilePaths[item], remoteClusterIPAddress, clusterUsername, clusterPassword, localDirName)
+			}
+			secretFilePaths = GetRemoteSecretFiles()
+		}
 	}
+
 	sanityLog.Infof("secretFilePaths: %s", secretFilePaths)
 	if len(secretFilePaths) > 0 {
 		sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}

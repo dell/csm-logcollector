@@ -107,7 +107,9 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 }
 
 // ScpConfigFile performs the operation to download the config file from remote cluster to container node
-func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUsername string, clusterPassword string) string {
+func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUsername string, clusterPassword string, destinationPath string) string {
+	var dstinationFileName = ""
+	isCopied := false
 	var (
 		err        error
 		sftpClient *sftp.Client
@@ -120,72 +122,46 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 	}
 	defer sftpClient.Close()
 
-	/*	************************************
-		COPY CONFIG FILE FROM REMOTE CLUSTER
-		************************************
-	*/
 	// remote file path and local directory path
 	var remoteFilePath = kubeconfigPath
-	var localDir = "."
+	var localDir = destinationPath
 
 	// open the source file
 	srcFile, err := sftpClient.Open(remoteFilePath)
 	if err != nil {
-		remoteClusterLog.Fatalf("Error: %s", err)
-	}
-	defer srcFile.Close()
+		if strings.Contains(remoteFilePath, "samples") || strings.Contains(remoteFilePath, "secret") {
+			remoteClusterLog.Infof("Content parsing skipped for the file %s, %s", remoteFilePath, err)
+		} else {
+			remoteClusterLog.Fatalf("Error: %s", err)
+		}
+	} else {
+		// create the destination file
+		if strings.Contains(remoteFilePath, "samples") || strings.Contains(remoteFilePath, "secret") {
+			remoteFilePath = UpdateFileName(remoteFilePath)
+		}
+		localFileName := path.Base(remoteFilePath)
+		dstFile, err := os.Create(path.Join(localDir, localFileName))
+		if err != nil {
+			remoteClusterLog.Fatalf("Error: %s", err)
+		}
+		dstinationFileName = dstFile.Name()
+		defer dstFile.Close()
 
-	// create the destination file
-	var localFileName = path.Base(remoteFilePath)
-	dstFile, err := os.Create(path.Join(localDir, localFileName))
-	if err != nil {
-		remoteClusterLog.Fatalf("Error: %s", err)
-	}
-	defer dstFile.Close()
-
-	// copy the local directory
-	if _, err = srcFile.WriteTo(dstFile); err != nil {
-		remoteClusterLog.Fatalf("Error: %s", err)
-	}
-
-	/*	**********************************************************
-		COPY DRIVERS' SECRET/CONFIG YAML FILES FROM REMOTE CLUSTER
-		**********************************************************
-	*/
-
-	secretFilePaths := GetSecretFilePath()
-	if len(secretFilePaths) > 0 {
-		for item := range secretFilePaths {
-			filePath := secretFilePaths[item]
-			localDirName := createDirectory("RemoteClusterSecretFiles")
-
-			// open the source file
-			sourceFile, err := sftpClient.Open(filePath)
-			if err == nil {
-				// create the destination file
-				localFilePath := UpdateFileName(filePath)
-				localFileName := path.Base(localFilePath)
-				destinationFile, err := os.Create(path.Join(localDirName, localFileName))
-				if err != nil {
-					remoteClusterLog.Fatalf("Error: %s", err)
-				}
-				defer destinationFile.Close()
-
-				// copy the local directory
-				if _, err = sourceFile.WriteTo(destinationFile); err != nil {
-					remoteClusterLog.Fatalf("Error: %s", err)
-				}
-			} else {
-				remoteClusterLog.Infof("Content parsing skipped for the file %s, %s", filePath, err)
-			}
-			if sourceFile != nil {
-				defer sourceFile.Close()
-			}
+		// copy the local directory
+		if _, err = srcFile.WriteTo(dstFile); err != nil {
+			remoteClusterLog.Fatalf("Error: %s", err)
+		} else {
+			isCopied = true
 		}
 	}
+	if srcFile != nil {
+		defer srcFile.Close()
+	}
+	if isCopied {
+		remoteClusterLog.Infof("Copy of %s file from remote server finished!", kubeconfigPath)
+	}
+	return dstinationFileName
 
-	remoteClusterLog.Infof("Copy of %s file from remote server finished!", dstFile.Name())
-	return dstFile.Name()
 }
 
 func createDirectory(name string) (dirName string) {
@@ -226,8 +202,10 @@ func UpdateFileName(filePath string) string {
 	return secretFilePath
 }
 
-// GetRemoteClusterIP get the IP address of the remote cluster
-func GetRemoteClusterIP() string {
+// GetRemoteClusterDetails get the IP address of the remote cluster
+func GetRemoteClusterDetails() (string, string, string) {
+	var userName string
+	var password string
 	var ipAddrr string
 	_, err := os.Stat("config.yml")
 	if err == nil {
@@ -261,6 +239,12 @@ func GetRemoteClusterIP() string {
 						if key == "ip_address" {
 							ipAddrr = value
 						}
+						if key == "username" {
+							userName = value
+						}
+						if key == "password" {
+							password = value
+						}
 					} else {
 						remoteClusterLog.Fatalf("No value found for kubeconfig_details sub-key: %s", key)
 					}
@@ -268,5 +252,5 @@ func GetRemoteClusterIP() string {
 			}
 		}
 	}
-	return ipAddrr
+	return ipAddrr, userName, password
 }
