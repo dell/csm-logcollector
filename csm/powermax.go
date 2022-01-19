@@ -133,6 +133,9 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string) {
 		dirName = namespaceDirectoryName + "/" + pod
 		podDirectoryName := createDirectory(dirName)
 		p.DescribePods(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
+		if optionalFlag == "True" || optionalFlag == "true" {
+			p.DescribePvcs(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
+		}
 	}
 
 	LeaseHolder = p.GetLeaseDetails()
