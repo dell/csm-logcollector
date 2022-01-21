@@ -88,7 +88,7 @@ func main() {
 
 	count = 4
 	for count > 0 {
-		fmt.Println("Optional log will be collected only True/true is entered. Supported values are True/true/False/false.")
+		fmt.Println("Optional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
 		fmt.Scanln(&optionalFlag)
 		if optionalFlag == "True" || optionalFlag == "true" || optionalFlag == "False" || optionalFlag == "false" {
 			break

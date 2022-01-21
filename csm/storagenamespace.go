@@ -284,16 +284,16 @@ func (s StorageNameSpaceStruct) DescribePvcs(podName string, describerSettings d
 		snsLog.Fatalf("Getting pods in namespace %s failed with error: %s", s.namespaceName, err.Error())
 	}
 
-	for i := 0; i < len(podList.Items); i++ {
+	for _, pod := range podList.Items {
 		var claimName string
-		if podList.Items[i].Name == podName {
-			for j := 0; j < len(podList.Items[i].Spec.Volumes); j++ {
-				pvc := podList.Items[i].Spec.Volumes[j].PersistentVolumeClaim
-				if pvc != nil {
-					claimName = podList.Items[i].Spec.Volumes[j].PersistentVolumeClaim.ClaimName
+		if pod.Name == podName {
+			for _, volume := range pod.Spec.Volumes {
+				if volume.PersistentVolumeClaim != nil {
+					claimName = volume.PersistentVolumeClaim.ClaimName
 					break
 				}
 			}
+
 			if claimName != "" {
 				d := describe.PersistentVolumeClaimDescriber{Interface: clientset}
 				DescribePVCDetails, err := d.Describe(s.namespaceName, claimName, describerSettings)

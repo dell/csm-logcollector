@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -19,6 +20,18 @@ import (
 
 func CreatePod(clientset kubernetes.Interface, namespace string, name string, containerName string) *v1.Pod {
 	pod := &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace}, Spec: v1.PodSpec{Containers: []v1.Container{{Name: containerName}}}}
+	resp, _ := clientset.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, meta_v1.CreateOptions{})
+	return resp
+}
+
+func CreatePVC(clientset kubernetes.Interface, namespace string, name string) *v1.PersistentVolumeClaim {
+	pvc := &v1.PersistentVolumeClaim{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace}, Spec: v1.PersistentVolumeClaimSpec{AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}, Resources: v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("5Gi")}}}}
+	resp, _ := clientset.CoreV1().PersistentVolumeClaims(namespace).Create(context.TODO(), pvc, meta_v1.CreateOptions{})
+	return resp
+}
+
+func CreatePodPVC(clientset kubernetes.Interface, namespace string, name string, containerName string, pvcName string) *v1.Pod {
+	pod := &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace}, Spec: v1.PodSpec{Containers: []v1.Container{{Name: containerName}}, Volumes: []v1.Volume{{Name: "pv-storage", VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: pvcName}}}}}}
 	resp, _ := clientset.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, meta_v1.CreateOptions{})
 	return resp
 }
@@ -97,6 +110,35 @@ func TestGetDriverDetails(t *testing.T) {
 	}
 }
 
+func TestGetDescribePvcs(t *testing.T) {
+	var st StorageNameSpaceStruct
+	st.namespaceName = "csi-powerstore"
+	var tests = []struct {
+		description  string
+		expectedData string
+	}{
+		{"Describe pvc",
+			"Name:          iscsipvc",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			clientset = fake.NewSimpleClientset()
+			CreatePVC(clientset, "csi-powerstore", "iscsipvc")
+			CreatePodPVC(clientset, "csi-powerstore", "test-describe-pvc", "attacher", "iscsipvc")
+			st.DescribePvcs("test-describe-pvc", describe.DescriberSettings{ShowEvents: true}, createDirectory("csi-powerstore/test-describe-pvc"))
+			file := "csi-powerstore/test-describe-pvc/iscsipvc-describe.txt"
+			data, _ := ioutil.ReadFile(file)
+			got := string(data)
+			strings.SplitN(got, "\n", 1)
+			if !strings.Contains(got, test.expectedData) {
+				t.Errorf("%T differ (-got, +want): \n\t\t - %s\n\t\t + %s", test.expectedData, got, test.expectedData)
+				return
+			}
+		})
+	}
+}
 func TestGetDescribePods(t *testing.T) {
 	var st StorageNameSpaceStruct
 	st.namespaceName = "vxflexos-namespace"
