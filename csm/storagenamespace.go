@@ -56,6 +56,7 @@ type StorageNameSpace interface {
 	GetRunningPods(string, *corev1.Pod)
 	GetNonRunningPods(string, *corev1.Pod)
 	DescribePods(string, describe.DescriberSettings, string)
+	DescribePvcs(string, describe.DescriberSettings, string)
 }
 
 // StorageNameSpaceStruct structure declares CSI driver fields
@@ -274,6 +275,44 @@ func (s StorageNameSpaceStruct) DescribePods(podName string, describerSettings d
 	}
 	filename := podName + "-describe.txt"
 	captureLOG(podDirectoryName, filename, DescribePodDetails)
+}
+
+// DescribePvcs describes the pvcs in the given namespace
+func (s StorageNameSpaceStruct) DescribePvcs(podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
+	podList, err := clientset.CoreV1().Pods(s.namespaceName).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		snsLog.Fatalf("Getting pods in namespace %s failed with error: %s", s.namespaceName, err.Error())
+	}
+
+	var claimName string
+	var result bool
+	for _, pod := range podList.Items {
+		if pod.Name == podName {
+			for _, volume := range pod.Spec.Volumes {
+				if volume.PersistentVolumeClaim != nil {
+					claimName = volume.PersistentVolumeClaim.ClaimName
+					result = true
+					break
+				}
+			}
+
+			if result {
+				break
+			}
+
+		}
+	}
+
+	if claimName != "" {
+		d := describe.PersistentVolumeClaimDescriber{Interface: clientset}
+		DescribePVCDetails, err := d.Describe(s.namespaceName, claimName, describerSettings)
+		if err != nil {
+			snsLog.Infof("Describing pvc %s in namespace %s failed with error: %s", claimName, s.namespaceName, err.Error())
+			return
+		}
+		filename := claimName + "-describe.txt"
+		captureLOG(podDirectoryName, filename, DescribePVCDetails)
+	}
 }
 
 // GetRunningPods collects log of the running pod in given namespace
