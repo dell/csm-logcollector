@@ -25,13 +25,18 @@ func CreatePod(clientset kubernetes.Interface, namespace string, name string, co
 }
 
 func CreatePVC(clientset kubernetes.Interface, namespace string, name string) *v1.PersistentVolumeClaim {
-	pvc := &v1.PersistentVolumeClaim{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace}, Spec: v1.PersistentVolumeClaimSpec{AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}, Resources: v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("5Gi")}}}}
+	pvc := &v1.PersistentVolumeClaim{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: v1.PersistentVolumeClaimSpec{AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			Resources: v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("5Gi")}}}}
 	resp, _ := clientset.CoreV1().PersistentVolumeClaims(namespace).Create(context.TODO(), pvc, meta_v1.CreateOptions{})
 	return resp
 }
 
 func CreatePodPVC(clientset kubernetes.Interface, namespace string, name string, containerName string, pvcName string) *v1.Pod {
-	pod := &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace}, Spec: v1.PodSpec{Containers: []v1.Container{{Name: containerName}}, Volumes: []v1.Volume{{Name: "pv-storage", VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: pvcName}}}}}}
+	pod := &v1.Pod{ObjectMeta: meta_v1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: v1.PodSpec{Containers: []v1.Container{{Name: containerName}},
+			Volumes: []v1.Volume{{Name: "pv-storage",
+				VolumeSource: v1.VolumeSource{PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: pvcName}}}}}}
 	resp, _ := clientset.CoreV1().Pods(pod.Namespace).Create(context.TODO(), pod, meta_v1.CreateOptions{})
 	return resp
 }
