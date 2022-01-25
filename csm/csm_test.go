@@ -620,3 +620,57 @@ func TestPerformSanitization(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateTarball(t *testing.T) {
+	type tests = []struct {
+		description      string
+		expectedFilename string
+	}
+	var createTarballTests = tests{
+		{
+			"Test for tarball creation",
+			"pod-logs.tar.gz",
+		},
+	}
+	for _, test := range createTarballTests {
+		t.Run(test.description, func(t *testing.T) {
+			namespaceDirectoryName := "pod-logs"
+			target := "."
+			createTarball(namespaceDirectoryName, target)
+			filename := "pod-logs.tar.gz"
+			if diff := cmp.Diff(filename, test.expectedFilename); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedFilename, diff)
+				return
+			}
+		})
+	}
+}
+
+func TestCaptureLOG(t *testing.T) {
+	type tests = []struct {
+		description     string
+		expectedContent string
+	}
+	var captureLogTests = tests{
+		{
+			"Test for tarball creation",
+			"sample data",
+		},
+	}
+	for _, test := range captureLogTests {
+		t.Run(test.description, func(t *testing.T) {
+			repoName := "pod-logs"
+			filename := "sample.txt"
+			content := "sample data"
+			captureLOG(repoName, filename, content)
+			file := "pod-logs/sample.txt"
+
+			data, _ := ioutil.ReadFile(file)
+			got := string(data)
+			if !strings.Contains(got, test.expectedContent) {
+				t.Errorf("%T differ (-got, +want): \n\t\t - %s\n\t\t + %s", test.expectedContent, got, test.expectedContent)
+				return
+			}
+		})
+	}
+}
