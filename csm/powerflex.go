@@ -14,11 +14,9 @@
 package csm
 
 import (
-	"bytes"
 	"context"
 	utils "csm-logcollector/utils"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -42,8 +40,6 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
 	dirName = namespaceDirectoryName + "/" + pod.Name
 	podDirectoryName := createDirectory(dirName)
-	containerCount := len(pod.Spec.Containers)
-	fmt.Printf("\tThere are %d containers for this pod\n", containerCount)
 
 	// check for sdc-monitor sidecar in node pod
 	if strings.Contains(pod.Name, "node") {
@@ -54,32 +50,12 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 				break
 			}
 		}
-
 		pflxLog.Infof("sdc-monitor container is deployed successfully: %t for %s", flag, pod.Name)
 	}
 
-	for container := range pod.Spec.Containers {
-		fmt.Println("\t\t", pod.Spec.Containers[container].Name)
-		dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
-		containerDirectoryName := createDirectory(dirName)
-
-		opts := corev1.PodLogOptions{}
-		opts.Container = pod.Spec.Containers[container].Name
-		req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &opts)
-		podLogs, err := req.Stream(context.TODO())
-		if err != nil {
-			pflxLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
-		}
-		defer podLogs.Close()
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, podLogs)
-		if err != nil {
-			pflxLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
-		}
-		str := buf.String()
-		filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
-		captureLOG(containerDirectoryName, filename, str)
-	}
+	str := "Pod " + pod.Name + " is in running state\n"
+	filename := pod.Name + ".txt"
+	captureLOG(podDirectoryName, filename, str)
 }
 
 // GetNonRunningPods is overridden for PowerFlex specific implementation

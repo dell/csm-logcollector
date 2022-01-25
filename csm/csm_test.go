@@ -183,7 +183,7 @@ func TestGetRunningPods(t *testing.T) {
 	// Unity, PowerScale, PowerStore
 	var st StorageNameSpaceStruct
 	var stTests = tests{
-		{"get running pod logs", "correct-namespace", "fake logs"},
+		{"get running pod logs", "correct-namespace", "Pod test-running-pod is in running state\n"},
 	}
 	for _, test := range stTests {
 		t.Run(test.description, func(t *testing.T) {
@@ -191,8 +191,7 @@ func TestGetRunningPods(t *testing.T) {
 			namespaceDirectoryName := "common-pod-logs"
 			pod := CreatePod(clientset, "correct-namespace", "test-running-pod", "test-container")
 			st.GetRunningPods(namespaceDirectoryName, pod)
-			file := "common-pod-logs/test-running-pod/test-container/test-running-pod-test-container.txt"
-
+			file := "common-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -205,7 +204,7 @@ func TestGetRunningPods(t *testing.T) {
 	// PowerFlex
 	var pflx PowerFlexStruct
 	var pflxTests = tests{
-		{"get running pod logs", "vxflexos-namespace", "fake logs"},
+		{"get running pod logs", "vxflexos-namespace", "Pod test-running-pod is in running state\n"},
 	}
 
 	for _, test := range pflxTests {
@@ -214,8 +213,7 @@ func TestGetRunningPods(t *testing.T) {
 			namespaceDirectoryName := "vxflexos-pod-logs"
 			pod := CreatePod(clientset, "vxflexos-namespace", "test-running-pod", "sdc-monitor")
 			pflx.GetRunningPods(namespaceDirectoryName, pod)
-			file := "vxflexos-pod-logs/test-running-pod/sdc-monitor/test-running-pod-sdc-monitor.txt"
-
+			file := "vxflexos-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -228,7 +226,7 @@ func TestGetRunningPods(t *testing.T) {
 	// PowerMax
 	var pmx PowerMaxStruct
 	var pmxTests = tests{
-		{"get running pod logs", "powermax-namespace", "fake logs"},
+		{"get running pod logs", "powermax-namespace", "Pod test-running-pod is in running state\n"},
 	}
 
 	for _, test := range pmxTests {
@@ -237,8 +235,7 @@ func TestGetRunningPods(t *testing.T) {
 			namespaceDirectoryName := "powermax-pod-logs"
 			pod := CreatePod(clientset, "powermax-namespace", "test-running-pod", "reverseproxy")
 			pmx.GetRunningPods(namespaceDirectoryName, pod)
-			file := "powermax-pod-logs/test-running-pod/reverseproxy/test-running-pod-reverseproxy.txt"
-
+			file := "powermax-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			if diff := cmp.Diff(got, test.expected); diff != "" {

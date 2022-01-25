@@ -16,7 +16,6 @@ package csm
 import (
 	"archive/tar"
 	"bufio"
-	"bytes"
 	"context"
 	utils "csm-logcollector/utils"
 	"flag"
@@ -322,32 +321,10 @@ func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, po
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
 	dirName = namespaceDirectoryName + "/" + pod.Name
 	podDirectoryName := createDirectory(dirName)
-	containerCount := len(pod.Spec.Containers)
-	fmt.Printf("There are %d containers for the pod\n", containerCount)
 
-	for container := range pod.Spec.Containers {
-		fmt.Println("\t", pod.Spec.Containers[container].Name)
-		dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
-		containerDirectoryName := createDirectory(dirName)
-
-		opts := corev1.PodLogOptions{}
-		opts.Container = pod.Spec.Containers[container].Name
-		req := clientset.CoreV1().Pods(s.namespaceName).GetLogs(pod.Name, &opts)
-		podLogs, err := req.Stream(context.TODO())
-		if err != nil {
-			snsLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
-		}
-		defer podLogs.Close()
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, podLogs)
-		if err != nil {
-			snsLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
-		}
-		str := buf.String()
-
-		filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
-		captureLOG(containerDirectoryName, filename, str)
-	}
+	str := "Pod " + pod.Name + " is in running state\n"
+	filename := pod.Name + ".txt"
+	captureLOG(podDirectoryName, filename, str)
 	fmt.Println()
 }
 
