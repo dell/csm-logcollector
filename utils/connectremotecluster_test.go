@@ -80,3 +80,35 @@ func TestCreateDirectory(t *testing.T) {
 		}
 	})
 }
+
+func TestGetRemoteClusterDetails(t *testing.T) {
+	type tests = []struct {
+		description      string
+		expectedUserName string
+		expectedPassword string
+		expectedIPAddrr  string
+	}
+	var remoteClusterTests = tests{
+		{
+			"Test for remote cluster details - postitve",
+			"sample_user",
+			"sample_password",
+			"xxx.xxx.xxx.xxx",
+		},
+	}
+	for _, test := range remoteClusterTests {
+		actualIPAddr, actualUsername, actualPassword := GetRemoteClusterDetails()
+		if diff := cmp.Diff(actualIPAddr, test.expectedIPAddrr); diff != "" {
+			t.Errorf("%T differ (-got, +want): %s", test.expectedIPAddrr, diff)
+			return
+		}
+		if diff := cmp.Diff(actualUsername, test.expectedUserName); diff != "" {
+			t.Errorf("%T differ (-got, +want): %s", test.expectedUserName, diff)
+			return
+		}
+		if diff := cmp.Diff(actualPassword, test.expectedPassword); diff != "" {
+			t.Errorf("%T differ (-got, +want): %s", test.expectedPassword, diff)
+			return
+		}
+	}
+}

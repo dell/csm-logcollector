@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	utils "csm-logcollector/utils"
 	"github.com/google/go-cmp/cmp"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
@@ -591,4 +592,31 @@ func TestPowerstoreLogs(t *testing.T) {
 		})
 	}
 
+}
+
+func TestPerformSanitization(t *testing.T) {
+	type tests = []struct {
+		description  string
+		expectedFlag bool
+	}
+	var performSanitizationTests = tests{
+		{
+			"Test for perform sanitization",
+			false,
+		},
+	}
+	var st StorageNameSpaceStruct
+	for _, test := range performSanitizationTests {
+		t.Run(test.description, func(t *testing.T) {
+			clientset = fake.NewSimpleClientset()
+			namespaceDirectoryName := "pod-logs"
+			pod := CreatePod(clientset, "test-namespace", "test-pod", "test-container")
+			st.GetRunningPods(namespaceDirectoryName, pod)
+			actualFlag := utils.PerformSanitization(namespaceDirectoryName)
+			if diff := cmp.Diff(actualFlag, test.expectedFlag); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedFlag, diff)
+				return
+			}
+		})
+	}
 }
