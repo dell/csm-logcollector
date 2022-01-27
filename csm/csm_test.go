@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	utils "csm-logcollector/utils"
 	"github.com/google/go-cmp/cmp"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
@@ -183,7 +184,7 @@ func TestGetRunningPods(t *testing.T) {
 	// Unity, PowerScale, PowerStore
 	var st StorageNameSpaceStruct
 	var stTests = tests{
-		{"get running pod logs", "correct-namespace", "fake logs"},
+		{"get running pod logs", "correct-namespace", "Pod test-running-pod is in running state\n"},
 	}
 	for _, test := range stTests {
 		t.Run(test.description, func(t *testing.T) {
@@ -191,8 +192,7 @@ func TestGetRunningPods(t *testing.T) {
 			namespaceDirectoryName := "common-pod-logs"
 			pod := CreatePod(clientset, "correct-namespace", "test-running-pod", "test-container")
 			st.GetRunningPods(namespaceDirectoryName, pod)
-			file := "common-pod-logs/test-running-pod/test-container/test-running-pod-test-container.txt"
-
+			file := "common-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -205,7 +205,7 @@ func TestGetRunningPods(t *testing.T) {
 	// PowerFlex
 	var pflx PowerFlexStruct
 	var pflxTests = tests{
-		{"get running pod logs", "vxflexos-namespace", "fake logs"},
+		{"get running pod logs", "vxflexos-namespace", "Pod test-running-pod is in running state\n"},
 	}
 
 	for _, test := range pflxTests {
@@ -214,8 +214,7 @@ func TestGetRunningPods(t *testing.T) {
 			namespaceDirectoryName := "vxflexos-pod-logs"
 			pod := CreatePod(clientset, "vxflexos-namespace", "test-running-pod", "sdc-monitor")
 			pflx.GetRunningPods(namespaceDirectoryName, pod)
-			file := "vxflexos-pod-logs/test-running-pod/sdc-monitor/test-running-pod-sdc-monitor.txt"
-
+			file := "vxflexos-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -228,7 +227,7 @@ func TestGetRunningPods(t *testing.T) {
 	// PowerMax
 	var pmx PowerMaxStruct
 	var pmxTests = tests{
-		{"get running pod logs", "powermax-namespace", "fake logs"},
+		{"get running pod logs", "powermax-namespace", "Pod test-running-pod is in running state\n"},
 	}
 
 	for _, test := range pmxTests {
@@ -237,8 +236,7 @@ func TestGetRunningPods(t *testing.T) {
 			namespaceDirectoryName := "powermax-pod-logs"
 			pod := CreatePod(clientset, "powermax-namespace", "test-running-pod", "reverseproxy")
 			pmx.GetRunningPods(namespaceDirectoryName, pod)
-			file := "powermax-pod-logs/test-running-pod/reverseproxy/test-running-pod-reverseproxy.txt"
-
+			file := "powermax-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -594,4 +592,85 @@ func TestPowerstoreLogs(t *testing.T) {
 		})
 	}
 
+}
+
+func TestPerformSanitization(t *testing.T) {
+	type tests = []struct {
+		description  string
+		expectedFlag bool
+	}
+	var performSanitizationTests = tests{
+		{
+			"Test for perform sanitization",
+			false,
+		},
+	}
+	var st StorageNameSpaceStruct
+	for _, test := range performSanitizationTests {
+		t.Run(test.description, func(t *testing.T) {
+			clientset = fake.NewSimpleClientset()
+			namespaceDirectoryName := "pod-logs"
+			pod := CreatePod(clientset, "test-namespace", "test-pod", "test-container")
+			st.GetRunningPods(namespaceDirectoryName, pod)
+			actualFlag := utils.PerformSanitization(namespaceDirectoryName)
+			if diff := cmp.Diff(actualFlag, test.expectedFlag); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedFlag, diff)
+				return
+			}
+		})
+	}
+}
+
+func TestCreateTarball(t *testing.T) {
+	type tests = []struct {
+		description      string
+		expectedFilename string
+	}
+	var createTarballTests = tests{
+		{
+			"Test for tarball creation",
+			"pod-logs.tar.gz",
+		},
+	}
+	for _, test := range createTarballTests {
+		t.Run(test.description, func(t *testing.T) {
+			namespaceDirectoryName := "pod-logs"
+			target := "."
+			createTarball(namespaceDirectoryName, target)
+			filename := "pod-logs.tar.gz"
+			if diff := cmp.Diff(filename, test.expectedFilename); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.expectedFilename, diff)
+				return
+			}
+		})
+	}
+}
+
+func TestCaptureLOG(t *testing.T) {
+	type tests = []struct {
+		description     string
+		expectedContent string
+	}
+	var captureLogTests = tests{
+		{
+			"Test for tarball creation",
+			"sample data",
+		},
+	}
+	for _, test := range captureLogTests {
+		t.Run(test.description, func(t *testing.T) {
+			repoName := "pod-logs"
+			filename := "sample.txt"
+			content := "sample data"
+			captureLOG(repoName, filename, content)
+			file := "pod-logs/sample.txt"
+
+			data, _ := ioutil.ReadFile(file)
+			got := string(data)
+			if !strings.Contains(got, test.expectedContent) {
+				t.Errorf("%T differ (-got, +want): \n\t\t - %s\n\t\t + %s", test.expectedContent, got, test.expectedContent)
+				return
+			}
+		})
+	}
 }
