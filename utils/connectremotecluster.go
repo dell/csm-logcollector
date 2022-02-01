@@ -15,14 +15,15 @@ package utils
 
 import (
 	"fmt"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 
 	"gopkg.in/yaml.v2"
 )
@@ -145,7 +146,12 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 			remoteClusterLog.Fatalf("Error: %s", err)
 		}
 		dstinationFileName = dstFile.Name()
-		defer dstFile.Close()
+
+		defer func() {
+			if err := dstFile.Close(); err != nil {
+				remoteClusterLog.Fatalf("Error closing file: %s with error %s \n", dstinationFileName, err.Error())
+			}
+		}()
 
 		// copy the local directory
 		if _, err = srcFile.WriteTo(dstFile); err != nil {

@@ -355,7 +355,12 @@ func captureLOG(repoName string, filename string, content string) {
 	if err != nil {
 		snsLog.Fatalf("Creating file %s failed with error: %s", filePath, err.Error())
 	}
-	defer f.Close()
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			snsLog.Fatalf("Error closing file: %s with error %s \n", filePath, err.Error())
+		}
+	}()
 	w := bufio.NewWriter(f)
 	w.WriteString(content)
 	w.Flush()
@@ -428,7 +433,12 @@ func createTarball(source string, target string) error {
 		snsLog.Errorf("Creating file %s failed with error: %s", target, err.Error())
 		return err
 	}
-	defer tarfile.Close()
+
+	defer func() {
+		if err := tarfile.Close(); err != nil {
+			snsLog.Fatalf("Error closing file: %s with error %s \n", tarfile.Name(), err.Error())
+		}
+	}()
 
 	tarball := tar.NewWriter(tarfile)
 	defer tarball.Close()
@@ -474,7 +484,12 @@ func createTarball(source string, target string) error {
 				snsLog.Errorf("Opening file %s failed with error: %s", path, err.Error())
 				return err
 			}
-			defer file.Close()
+
+			defer func() {
+				if err := file.Close(); err != nil {
+					snsLog.Fatalf("Error closing file: %s with error %s \n", path, err.Error())
+				}
+			}()
 			_, err = io.Copy(tarball, file)
 			return err
 		})
@@ -527,14 +542,25 @@ func copy(src, dst string) {
 	if err != nil {
 		snsLog.Fatalf("Opening file %s failed with error: %s", src, err.Error())
 	}
-	defer source.Close()
+
+	defer func() {
+		if err := source.Close(); err != nil {
+			snsLog.Fatalf("Error closing file: %s with error %s \n", src, err.Error())
+		}
+	}()
 
 	dst = dst + "/" + logfile
 	destination, err := os.Create(dst)
 	if err != nil {
 		snsLog.Fatalf("Creating file %s failed with error: %s", dst, err.Error())
 	}
-	defer destination.Close()
+
+	defer func() {
+		if err := destination.Close(); err != nil {
+			snsLog.Fatalf("Error closing file: %s with error %s \n", dst, err.Error())
+		}
+	}()
+
 	nBytes, err := io.Copy(destination, source)
 	if err != nil {
 		snsLog.Fatalf("Copying the contents of file failed with error: %s", err.Error())
