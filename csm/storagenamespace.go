@@ -257,7 +257,7 @@ func createDirectory(name string) (dirName string) {
 	_, err := os.Stat(name)
 
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(name, 0777)
+		errDir := os.MkdirAll(name, 0750)
 		if errDir != nil {
 			snsLog.Fatalf("Error while creating directory: %s", err.Error())
 		}
