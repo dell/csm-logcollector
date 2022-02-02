@@ -36,7 +36,10 @@ func main() {
 	const consentMsg string = "As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)"
 
 	fmt.Println(consentMsg)
-	fmt.Scanln(&consent)
+	_, err := fmt.Scanln(&consent)
+	if err != nil {
+		logger.Fatalf("Getting concent from user failed with error: %s", err.Error())
+	}
 	if consent != "Y" && consent != "y" {
 		logger.Fatalf("Exiting the application as consent is not provided.")
 	}
