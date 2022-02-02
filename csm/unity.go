@@ -61,14 +61,14 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 	if err != nil {
 		unityLog.Fatalf("Getting all pods failed with error: %s", err.Error())
 	}
-	for _, pod := range podallns.Items {
-		if pod.Namespace != namespace {
+	for pod := range podallns.Items {
+		if podallns.Items[pod].Namespace != namespace {
 			continue
-		} else if pod.Namespace == namespace {
-			if pod.Status.Phase == RunningPodState {
-				p.GetRunningPods(namespaceDirectoryName, &pod)
+		} else if podallns.Items[pod].Namespace == namespace {
+			if podallns.Items[pod].Status.Phase == RunningPodState {
+				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			} else {
-				p.GetNonRunningPods(namespaceDirectoryName, &pod)
+				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			}
 		}
 	}
