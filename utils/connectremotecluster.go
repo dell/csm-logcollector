@@ -84,7 +84,7 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 		User:            user,
 		Auth:            []ssh.AuthMethod{ssh.Password(password)},
 		Timeout:         30 * time.Second,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: trustedHostKeyCallback(""),
 	}
 
 	// connect to ssh
