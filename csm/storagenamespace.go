@@ -362,8 +362,11 @@ func captureLOG(repoName string, filename string, content string) {
 		}
 	}()
 	w := bufio.NewWriter(f)
-	w.WriteString(content)
-	w.Flush()
+	_, wrerr := w.WriteString(content)
+	buferr := w.Flush()
+	if (buferr != nil) || (wrerr != nil) {
+		snsLog.Fatalf("error in writing logfile")
+	}
 }
 
 // ReadConfigFile reads the application configuration file
