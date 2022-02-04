@@ -351,7 +351,7 @@ func (s StorageNameSpaceStruct) GetNonRunningPods(namespaceDirectoryName string,
 
 func captureLOG(repoName string, filename string, content string) {
 	filePath := repoName + "/" + filename
-	f, err := os.Create(filePath)
+	f, err := os.Create(filepath.Clean(filePath))
 	if err != nil {
 		snsLog.Fatalf("Creating file %s failed with error: %s", filePath, err.Error())
 	}
@@ -431,7 +431,7 @@ func createTarball(source string, target string) error {
 	// add the log file file to source directory
 	copy(logfile, source)
 	target = filepath.Join(target, fmt.Sprintf("%s.tar.gz", filename))
-	tarfile, err := os.Create(target)
+	tarfile, err := os.Create(filepath.Clean(target))
 	if err != nil {
 		snsLog.Errorf("Creating file %s failed with error: %s", target, err.Error())
 		return err
@@ -482,7 +482,7 @@ func createTarball(source string, target string) error {
 				return nil
 			}
 
-			file, err := os.Open(path)
+			file, err := os.Open(filepath.Clean(path))
 			if err != nil {
 				snsLog.Errorf("Opening file %s failed with error: %s", path, err.Error())
 				return err
@@ -541,7 +541,7 @@ func copy(src, dst string) {
 		snsLog.Fatal(err.Error())
 	}
 
-	source, err := os.Open(src)
+	source, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		snsLog.Fatalf("Opening file %s failed with error: %s", src, err.Error())
 	}
@@ -553,7 +553,7 @@ func copy(src, dst string) {
 	}()
 
 	dst = dst + "/" + logfile
-	destination, err := os.Create(dst)
+	destination, err := os.Create(filepath.Clean(dst))
 	if err != nil {
 		snsLog.Fatalf("Creating file %s failed with error: %s", dst, err.Error())
 	}
