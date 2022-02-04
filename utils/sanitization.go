@@ -84,8 +84,7 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 	var sensitiveContentList []string
 	for item := range secretFilePaths {
 		filePath := secretFilePaths[item]
-		filePath = filepath.Clean(filePath)
-		_, err := os.Stat(filePath)
+		_, err := os.Stat(filepath.Clean(filePath))
 		if err == nil {
 			yamlFile, err := ioutil.ReadFile(filePath)
 			if err != nil {
@@ -97,7 +96,7 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 			var fileData string
 			if strings.Contains(filePath, "powerflex") {
 				// Powerflex driver has config.yaml which has data as list[map].
-				fileContent, err := ioutil.ReadFile(filePath)
+				fileContent, err := ioutil.ReadFile(filepath.Clean(filePath))
 				fileData = string(fileContent)
 				if err != nil {
 					sanityLog.Fatalf("Reading secret file %s failed with error %v", filePath, err)
