@@ -22,6 +22,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -161,7 +162,8 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 			remoteFilePath = UpdateFileName(remoteFilePath)
 		}
 		localFileName := path.Base(remoteFilePath)
-		dstFile, err := os.Create(path.Join(localDir, localFileName))
+		createFilePath := path.Join(localDir, localFileName)
+		dstFile, err := os.Create(filepath.Clean(createFilePath))
 		if err != nil {
 			remoteClusterLog.Fatalf("Error: %s", err)
 		}

@@ -86,7 +86,7 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 		filePath := secretFilePaths[item]
 		_, err := os.Stat(filePath)
 		if err == nil {
-			yamlFile, err := ioutil.ReadFile(filePath)
+			yamlFile, err := ioutil.ReadFile(filepath.Clean(filePath))
 			if err != nil {
 				sanityLog.Fatalf("Reading secret file %s failed with error %v ", filePath, err)
 			}
@@ -96,7 +96,7 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 			var fileData string
 			if strings.Contains(filePath, "powerflex") {
 				// Powerflex driver has config.yaml which has data as list[map].
-				fileContent, err := ioutil.ReadFile(filePath)
+				fileContent, err := ioutil.ReadFile(filepath.Clean(filePath))
 				fileData = string(fileContent)
 				if err != nil {
 					sanityLog.Fatalf("Reading secret file %s failed with error %v", filePath, err)
@@ -305,7 +305,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 			if !info.IsDir() {
 				for str := range sensitiveContentList {
 					// read file
-					fileContent, err := ioutil.ReadFile(path)
+					fileContent, err := ioutil.ReadFile(filepath.Clean(path))
 					if err != nil {
 						sanityLog.Fatalf("File reading failed with error: %s", err)
 					}
