@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -21,6 +22,7 @@ func SetLogger() (*logrus.Logger, string) {
 		if singletonLog == nil {
 			t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 			logfile = t + "_logs.txt"
+			logfile = filepath.Clean(logfile)
 			file, err := os.OpenFile(logfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 			singletonLog = logrus.New()
 			singletonLog.Level = logrus.InfoLevel
