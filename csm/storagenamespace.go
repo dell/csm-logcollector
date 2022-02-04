@@ -257,7 +257,7 @@ func createDirectory(name string) (dirName string) {
 	_, err := os.Stat(name)
 
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(name, 0777)
+		errDir := os.MkdirAll(name, 0750)
 		if errDir != nil {
 			snsLog.Fatalf("Error while creating directory: %s", err.Error())
 		}
@@ -362,8 +362,11 @@ func captureLOG(repoName string, filename string, content string) {
 		}
 	}()
 	w := bufio.NewWriter(f)
-	w.WriteString(content)
-	w.Flush()
+	_, wrerr := w.WriteString(content)
+	buferr := w.Flush()
+	if (buferr != nil) || (wrerr != nil) {
+		snsLog.Fatalf("error in writing logfile")
+	}
 }
 
 // ReadConfigFile reads the application configuration file

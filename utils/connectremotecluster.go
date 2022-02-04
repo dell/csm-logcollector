@@ -14,16 +14,16 @@
 package utils
 
 import (
+	"encoding/base64"
 	"fmt"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
 	"os"
 	"path"
 	"strings"
 	"time"
-
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 
 	"gopkg.in/yaml.v2"
 )
@@ -72,23 +72,19 @@ func GetLocalIP() (string, error) {
 // Connect method creates a connection with the remote cluster
 func Connect(user, password, host string, port int) (*sftp.Client, error) {
 	var (
-		auth         []ssh.AuthMethod
 		addr         string
 		clientConfig *ssh.ClientConfig
 		sshClient    *ssh.Client
 		sftpClient   *sftp.Client
 		err          error
 	)
-	// get auth method
-	auth = make([]ssh.AuthMethod, 0)
-	auth = append(auth, ssh.Password(password))
 
 	// Define the Client Config
 	clientConfig = &ssh.ClientConfig{
 		User:            user,
-		Auth:            auth,
+		Auth:            []ssh.AuthMethod{ssh.Password(password)},
 		Timeout:         30 * time.Second,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: trustedHostKeyCallback(""),
 	}
 
 	// connect to ssh
@@ -105,6 +101,30 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 	}
 
 	return sftpClient, nil
+}
+
+// create human-readable SSH-key strings
+func keyString(k ssh.PublicKey) string {
+	return k.Type() + " " + base64.StdEncoding.EncodeToString(k.Marshal()) // e.g. "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTY...."
+}
+
+func trustedHostKeyCallback(trustedKey string) ssh.HostKeyCallback {
+
+	if trustedKey == "" {
+		return func(_ string, _ net.Addr, k ssh.PublicKey) error {
+			remoteClusterLog.Printf("WARNING: SSH-key verification is *NOT* in effect: to fix, add this trustedKey: %q", keyString(k))
+			return nil
+		}
+	}
+
+	return func(_ string, _ net.Addr, k ssh.PublicKey) error {
+		ks := keyString(k)
+		if trustedKey != ks {
+			return fmt.Errorf("SSH-key verification: expected %q but got %q", trustedKey, ks)
+		}
+
+		return nil
+	}
 }
 
 // ScpConfigFile performs the operation to download the config file from remote cluster to container node
@@ -174,7 +194,7 @@ func createDirectory(name string) (dirName string) {
 	_, err := os.Stat(name)
 
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(name, 0777)
+		errDir := os.MkdirAll(name, 0750)
 		if errDir != nil {
 			remoteClusterLog.Fatalf("Error while creating directory: %s", err.Error())
 		}

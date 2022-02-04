@@ -324,7 +324,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 						fileData = re.ReplaceAllString(fileData, "*********")
 
 						// write back to original file
-						err = ioutil.WriteFile(path, []byte(fileData), 0666)
+						err = ioutil.WriteFile(path, []byte(fileData), 0600)
 						if err != nil {
 							sanityLog.Fatalf("File writing failed with error: %s", err)
 							os.Exit(1)

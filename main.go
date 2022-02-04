@@ -36,13 +36,19 @@ func main() {
 	const consentMsg string = "As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)"
 
 	fmt.Println(consentMsg)
-	fmt.Scanln(&consent)
+	_, err := fmt.Scanln(&consent)
+	if err != nil {
+		logger.Fatalf("Getting concent from user failed with error: %s", err.Error())
+	}
 	if consent != "Y" && consent != "y" {
 		logger.Fatalf("Exiting the application as consent is not provided.")
 	}
 
 	fmt.Println("Enter the namespace: ")
-	fmt.Scanln(&namespace)
+	_, errns := fmt.Scanln(&namespace)
+	if errns != nil {
+		logger.Fatalf("Entering namespace failed with error: %s", errns.Error())
+	}
 	temp := strings.ToLower(namespace)
 	namespaces := csm.GetNamespaces()
 
@@ -52,7 +58,10 @@ func main() {
 	if !result && len(nsSlice) == 0 {
 		for count > 0 {
 			fmt.Println("Given namespace is not found. Please enter valid namespace:")
-			fmt.Scanln(&namespace)
+			_, err := fmt.Scanln(&namespace)
+			if err != nil {
+				logger.Fatalf("Entering valid namespace failed with error: %s", err.Error())
+			}
 			temp = strings.ToLower(namespace)
 			result, nsSlice = CheckNamespace(temp, namespaces)
 			if result || len(nsSlice) > 0 {
@@ -73,7 +82,10 @@ func main() {
 				fmt.Printf("%d. %s\n", i+1, x)
 			}
 			fmt.Println("Enter the choice:")
-			fmt.Scanln(&index)
+			_, err := fmt.Scanln(&index)
+			if err != nil {
+				logger.Fatalf("Entering namespace failed with error: %s", err.Error())
+			}
 			if index < 1 || index > len(nsSlice) {
 				fmt.Println("Please select valid namespace")
 				count--
@@ -89,7 +101,10 @@ func main() {
 	count = 4
 	for count > 0 {
 		fmt.Println("Optional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
-		fmt.Scanln(&optionalFlag)
+		_, err := fmt.Scanln(&optionalFlag)
+		if err != nil {
+			logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
+		}
 		if optionalFlag == "True" || optionalFlag == "true" || optionalFlag == "False" || optionalFlag == "false" {
 			break
 		}
