@@ -84,9 +84,9 @@ func ReadSecretFileContent(secretFilePaths []string) []string {
 	var sensitiveContentList []string
 	for item := range secretFilePaths {
 		filePath := secretFilePaths[item]
-		_, err := os.Stat(filepath.Clean(filePath))
+		_, err := os.Stat(filePath)
 		if err == nil {
-			yamlFile, err := ioutil.ReadFile(filePath)
+			yamlFile, err := ioutil.ReadFile(filepath.Clean(filePath))
 			if err != nil {
 				sanityLog.Fatalf("Reading secret file %s failed with error %v ", filePath, err)
 			}
