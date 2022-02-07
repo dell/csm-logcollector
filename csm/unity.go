@@ -32,12 +32,12 @@ type UnityStruct struct {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
+func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noofdays int) {
 	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
 	GetNodes()
 	podarray := p.GetPods()
-
+	daterange := GetDateRange(noofdays)
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 	dirName = namespace + "_" + t
@@ -68,7 +68,7 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string) {
 			if podallns.Items[pod].Status.Phase == RunningPodState {
 				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			} else {
-				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
+				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange)
 			}
 		}
 	}

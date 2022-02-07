@@ -125,7 +125,15 @@ func main() {
 		p = csm.PowerFlexStruct{}
 	}
 
-	p.GetLogs(temp, optionalFlag)
+	noofdays := -1
+	fmt.Println("Enter the no of days the logs need to be collected from today: ")
+	_, errdays := fmt.Scanln(&noofdays)
+	if errdays != nil {
+		logger.Fatalf("Entering number of days failed with error: %s", errns.Error())
+	}
+	fmt.Printf("Logs will be collected for past %d days from today ", noofdays)
+
+	p.GetLogs(temp, optionalFlag, noofdays)
 }
 
 // CheckNamespace verifies if given namespace exists
