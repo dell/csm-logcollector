@@ -407,7 +407,7 @@ func captureLOG(repoName string, filename string, content string) {
 	}
 }
 
-// Getting date range bassed on user input
+// GetDateRange returns date range bassed on user input
 func GetDateRange(noOfDays int) metav1.Time {
 
 	materNode := ""
