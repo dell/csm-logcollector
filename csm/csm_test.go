@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	utils "csm-logcollector/utils"
+
 	"github.com/google/go-cmp/cmp"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
@@ -190,8 +191,10 @@ func TestGetRunningPods(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "common-pod-logs"
+			daterange := meta_v1.Now()
+			optionalFlag := "false"
 			pod := CreatePod(clientset, "correct-namespace", "test-running-pod", "test-container")
-			st.GetRunningPods(namespaceDirectoryName, pod)
+			st.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
 			file := "common-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
@@ -213,7 +216,9 @@ func TestGetRunningPods(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "vxflexos-pod-logs"
 			pod := CreatePod(clientset, "vxflexos-namespace", "test-running-pod", "sdc-monitor")
-			pflx.GetRunningPods(namespaceDirectoryName, pod)
+			daterange := meta_v1.Now()
+			optionalFlag := "false"
+			pflx.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
 			file := "vxflexos-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
@@ -235,7 +240,9 @@ func TestGetRunningPods(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "powermax-pod-logs"
 			pod := CreatePod(clientset, "powermax-namespace", "test-running-pod", "reverseproxy")
-			pmx.GetRunningPods(namespaceDirectoryName, pod)
+			daterange := meta_v1.Now()
+			optionalFlag := "false"
+			pmx.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
 			file := "powermax-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
@@ -424,7 +431,8 @@ func TestPowermaxLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pmax.GetLogs(test.namespace, "true")
+			dayscount := -1
+			pmax.GetLogs(test.namespace, "true", dayscount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -462,7 +470,8 @@ func TestPowerscaleLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pscale.GetLogs(test.namespace, "true")
+			dayscount := -1
+			pscale.GetLogs(test.namespace, "true", dayscount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -501,7 +510,8 @@ func TestPowerflexLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pflx.GetLogs(test.namespace, "true")
+			dayscount := -1
+			pflx.GetLogs(test.namespace, "true", dayscount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -540,7 +550,8 @@ func TestUnityLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			unity.GetLogs(test.namespace, "true")
+			dayscount := -1
+			unity.GetLogs(test.namespace, "true", dayscount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -578,7 +589,8 @@ func TestPowerstoreLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			pstore.GetLogs(test.namespace, "true")
+			dayscount := -1
+			pstore.GetLogs(test.namespace, "true", dayscount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -611,7 +623,9 @@ func TestPerformSanitization(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "pod-logs"
 			pod := CreatePod(clientset, "test-namespace", "test-pod", "test-container")
-			st.GetRunningPods(namespaceDirectoryName, pod)
+			daterange := meta_v1.Now()
+			optionalFlag := "false"
+			st.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
 			actualFlag := utils.PerformSanitization(namespaceDirectoryName)
 			if diff := cmp.Diff(actualFlag, test.expectedFlag); diff != "" {
 				t.Errorf("%T differ (-got, +want): %s", test.expectedFlag, diff)

@@ -97,7 +97,7 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string, noofday
 			if podallns.Items[pod].Status.Phase == RunningPodState {
 				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange, optionalFlag)
 			} else {
-				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange)
+				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			}
 		}
 	}

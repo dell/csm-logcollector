@@ -71,7 +71,7 @@ func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev
 			opts := corev1.PodLogOptions{}
 			opts.Container = pod.Spec.Containers[container].Name
 			if daterange != nil {
-				fmt.Printf("Logs will be collected from: %v", daterange)
+				fmt.Printf("Logs will be collected from: %v \n", daterange)
 				opts.SinceTime = daterange
 			}
 			req := clientset.CoreV1().Pods(p.namespaceName).GetLogs(pod.Name, &opts)
@@ -100,22 +100,14 @@ func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev
 }
 
 // GetNonRunningPods is overridden for PowerMax specific implementation
-func (p PowerMaxStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod, daterange *metav1.Time) {
+func (p PowerMaxStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
-	fmt.Printf("pod.Name........%s\n", pod.Name)
+	fmt.Printf("pod.Name.......%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
 	dirName = namespaceDirectoryName + "/" + pod.Name
 	podDirectoryName := createDirectory(dirName)
 	containerCount := len(pod.Spec.Containers)
 	fmt.Printf("There are %d containers for this pod\n", containerCount)
-
-	if daterange != nil {
-		podLogOpts := corev1.PodLogOptions{}
-		podLogOpts.SinceTime = daterange
-		fmt.Printf("Time: %v", podLogOpts.SinceTime)
-		podLogs := clientset.CoreV1().Pods("").GetLogs(pod.Name, &podLogOpts)
-		fmt.Printf("Logs: %v", podLogs)
-	}
 
 	// check for reverse-proxy sidecar in controller pod
 	if pod.Name == LeaseHolder {
@@ -180,7 +172,7 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noofdays 
 				fmt.Println("\t*************************************************************")
 				pmaxLog.Infof("Logs collected for runningpods of %s", namespace)
 			} else {
-				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange)
+				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 				fmt.Println("\t*************************************************************")
 				pmaxLog.Infof("Logs collected for non-runningpods of %s", namespace)
 			}

@@ -69,7 +69,7 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 			opts := corev1.PodLogOptions{}
 			opts.Container = pod.Spec.Containers[container].Name
 			if daterange != nil {
-				fmt.Printf("Logs will be collected from: %v", daterange)
+				fmt.Printf("Logs will be collected from: %v\n", daterange)
 				opts.SinceTime = daterange
 			}
 			req := clientset.CoreV1().Pods(p.namespaceName).GetLogs(pod.Name, &opts)
@@ -98,7 +98,7 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 }
 
 // GetNonRunningPods is overridden for PowerFlex specific implementation
-func (p PowerFlexStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod, daterange *metav1.Time) {
+func (p PowerFlexStruct) GetNonRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -106,14 +106,6 @@ func (p PowerFlexStruct) GetNonRunningPods(namespaceDirectoryName string, pod *c
 	podDirectoryName := createDirectory(dirName)
 	containerCount := len(pod.Spec.Containers)
 	fmt.Printf("\tThere are %d containers for this pod\n", containerCount)
-
-	if daterange != nil {
-		podLogOpts := corev1.PodLogOptions{}
-		podLogOpts.SinceTime = daterange
-		fmt.Printf("Time: %v", podLogOpts.SinceTime)
-		podLogs := clientset.CoreV1().Pods("").GetLogs(pod.Name, &podLogOpts)
-		fmt.Printf("Logs: %v", podLogs)
-	}
 
 	// check for sdc-monitor sidecar in node pod
 	if strings.Contains(pod.Name, "node") {
@@ -173,7 +165,7 @@ func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string, noofdays
 			if podallns.Items[pod].Status.Phase == RunningPodState {
 				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange, optionalFlag)
 			} else {
-				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange)
+				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			}
 		}
 	}

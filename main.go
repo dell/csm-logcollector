@@ -132,7 +132,7 @@ func main() {
 		if errdays != nil {
 			logger.Fatalf("Entering number of days failed with error: %s", errdays.Error())
 		}
-		fmt.Printf("Logs will be collected for past %d days from today ", noofdays)
+		fmt.Printf("Logs will be collected for past %d days from today\n", noofdays)
 	}
 
 	p.GetLogs(temp, optionalFlag, noofdays)
