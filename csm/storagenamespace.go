@@ -53,7 +53,7 @@ type StorageNameSpace interface {
 	GetPods() []string
 	GetDriverDetails(string) (string, string, string)
 	GetLeaseDetails() string
-	GetRunningPods(string, *corev1.Pod)
+	GetRunningPods(string, *corev1.Pod, *metav1.Time, string)
 	GetNonRunningPods(string, *corev1.Pod, *metav1.Time)
 	DescribePods(string, describe.DescriberSettings, string)
 	DescribePvcs(string, describe.DescriberSettings, string)
@@ -317,17 +317,53 @@ func (s StorageNameSpaceStruct) DescribePvcs(podName string, describerSettings d
 }
 
 // GetRunningPods collects log of the running pod in given namespace
-func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
+func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, daterange *metav1.Time, optionalFlag string) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
 	dirName = namespaceDirectoryName + "/" + pod.Name
 	podDirectoryName := createDirectory(dirName)
 
-	str := "Pod " + pod.Name + " is in running state\n"
-	filename := pod.Name + ".txt"
-	captureLOG(podDirectoryName, filename, str)
-	fmt.Println()
+	if optionalFlag == "False" || optionalFlag == "false" {
+		str := "Pod " + pod.Name + " is in running state\n"
+		filename := pod.Name + ".txt"
+		captureLOG(podDirectoryName, filename, str)
+		fmt.Println()
+	} else {
+		for container := range pod.Spec.Containers {
+			fmt.Printf("\t Collecting Logs from container %s\n", pod.Spec.Containers[container].Name)
+			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
+			containerDirectoryName := createDirectory(dirName)
+
+			opts := corev1.PodLogOptions{}
+			opts.Container = pod.Spec.Containers[container].Name
+			if daterange != nil {
+				fmt.Printf("Logs will be collected from: %v", daterange)
+				opts.SinceTime = daterange
+			}
+			req := clientset.CoreV1().Pods(s.namespaceName).GetLogs(pod.Name, &opts)
+			podLogs, err := req.Stream(context.TODO())
+			if err != nil {
+				snsLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
+			}
+
+			defer func() {
+				if err := podLogs.Close(); err != nil {
+					snsLog.Fatalf("Error streaming file with error %s \n", err.Error())
+				}
+			}()
+
+			buf := new(bytes.Buffer)
+			_, err = io.Copy(buf, podLogs)
+			if err != nil {
+				snsLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
+			}
+			str := buf.String()
+
+			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
+			captureLOG(containerDirectoryName, filename, str)
+		}
+	}
 }
 
 // GetNonRunningPods collects log of the nonrunning pod in given namespace
@@ -341,7 +377,7 @@ func (s StorageNameSpaceStruct) GetNonRunningPods(namespaceDirectoryName string,
 	podDirectoryName := createDirectory(dirName)
 
 	for container := range pod.Spec.Containers {
-		fmt.Println("\t Collecting Logs from container %s", pod.Spec.Containers[container].Name)
+		fmt.Printf("\t Collecting Logs from container %s\n", pod.Spec.Containers[container].Name)
 		dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
 		containerDirectoryName := createDirectory(dirName)
 
@@ -356,7 +392,13 @@ func (s StorageNameSpaceStruct) GetNonRunningPods(namespaceDirectoryName string,
 		if err != nil {
 			snsLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
 		}
-		defer podLogs.Close()
+
+		defer func() {
+			if err := podLogs.Close(); err != nil {
+				snsLog.Fatalf("Error streaming file with error %s \n", err.Error())
+			}
+		}()
+
 		buf := new(bytes.Buffer)
 		_, err = io.Copy(buf, podLogs)
 		if err != nil {

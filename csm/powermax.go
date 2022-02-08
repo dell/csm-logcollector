@@ -14,9 +14,11 @@
 package csm
 
 import (
+	"bytes"
 	"context"
 	utils "csm-logcollector/utils"
 	"fmt"
+	"io"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -36,7 +38,7 @@ type PowerMaxStruct struct {
 var LeaseHolder string
 
 // GetRunningPods is overridden for PowerMax specific implementation
-func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
+func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, daterange *metav1.Time, optionalFlag string) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -55,9 +57,46 @@ func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev
 		pmaxLog.Infof("Reverse Proxy is deployed as sidecar: %t", flag)
 	}
 
-	str := "Pod " + pod.Name + " is in running state\n"
-	filename := pod.Name + ".txt"
-	captureLOG(podDirectoryName, filename, str)
+	if optionalFlag == "False" || optionalFlag == "false" {
+		str := "Pod " + pod.Name + " is in running state\n"
+		filename := pod.Name + ".txt"
+		captureLOG(podDirectoryName, filename, str)
+		fmt.Println()
+	} else {
+		for container := range pod.Spec.Containers {
+			fmt.Printf("\t Collecting Logs from container %s\n", pod.Spec.Containers[container].Name)
+			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
+			containerDirectoryName := createDirectory(dirName)
+
+			opts := corev1.PodLogOptions{}
+			opts.Container = pod.Spec.Containers[container].Name
+			if daterange != nil {
+				fmt.Printf("Logs will be collected from: %v", daterange)
+				opts.SinceTime = daterange
+			}
+			req := clientset.CoreV1().Pods(p.namespaceName).GetLogs(pod.Name, &opts)
+			podLogs, err := req.Stream(context.TODO())
+			if err != nil {
+				pmaxLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
+			}
+
+			defer func() {
+				if err := podLogs.Close(); err != nil {
+					pmaxLog.Fatalf("Error streaming file with error %s \n", err.Error())
+				}
+			}()
+
+			buf := new(bytes.Buffer)
+			_, err = io.Copy(buf, podLogs)
+			if err != nil {
+				pmaxLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
+			}
+			str := buf.String()
+
+			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
+			captureLOG(containerDirectoryName, filename, str)
+		}
+	}
 }
 
 // GetNonRunningPods is overridden for PowerMax specific implementation
@@ -137,7 +176,7 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noofdays 
 			continue
 		} else if podallns.Items[pod].Namespace == namespace {
 			if podallns.Items[pod].Status.Phase == RunningPodState {
-				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod])
+				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange, optionalFlag)
 				fmt.Println("\t*************************************************************")
 				pmaxLog.Infof("Logs collected for runningpods of %s", namespace)
 			} else {

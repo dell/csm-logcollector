@@ -66,7 +66,7 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noofdays int
 			continue
 		} else if podallns.Items[pod].Namespace == namespace {
 			if podallns.Items[pod].Status.Phase == RunningPodState {
-				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod])
+				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange, optionalFlag)
 			} else {
 				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange)
 			}
