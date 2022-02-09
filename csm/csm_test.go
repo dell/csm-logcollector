@@ -191,10 +191,10 @@ func TestGetRunningPods(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "common-pod-logs"
-			daterange := meta_v1.Now()
+			dateRange := meta_v1.Now()
 			optionalFlag := "false"
 			pod := CreatePod(clientset, "correct-namespace", "test-running-pod", "test-container")
-			st.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
+			st.GetRunningPods(namespaceDirectoryName, pod, &dateRange, optionalFlag)
 			file := "common-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
@@ -216,9 +216,9 @@ func TestGetRunningPods(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "vxflexos-pod-logs"
 			pod := CreatePod(clientset, "vxflexos-namespace", "test-running-pod", "sdc-monitor")
-			daterange := meta_v1.Now()
+			dateRange := meta_v1.Now()
 			optionalFlag := "false"
-			pflx.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
+			pflx.GetRunningPods(namespaceDirectoryName, pod, &dateRange, optionalFlag)
 			file := "vxflexos-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
@@ -240,9 +240,9 @@ func TestGetRunningPods(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "powermax-pod-logs"
 			pod := CreatePod(clientset, "powermax-namespace", "test-running-pod", "reverseproxy")
-			daterange := meta_v1.Now()
+			dateRange := meta_v1.Now()
 			optionalFlag := "false"
-			pmx.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
+			pmx.GetRunningPods(namespaceDirectoryName, pod, &dateRange, optionalFlag)
 			file := "powermax-pod-logs/test-running-pod/test-running-pod.txt"
 			data, _ := ioutil.ReadFile(file)
 			got := string(data)
@@ -623,9 +623,9 @@ func TestPerformSanitization(t *testing.T) {
 			clientset = fake.NewSimpleClientset()
 			namespaceDirectoryName := "pod-logs"
 			pod := CreatePod(clientset, "test-namespace", "test-pod", "test-container")
-			daterange := meta_v1.Now()
+			dateRange := meta_v1.Now()
 			optionalFlag := "false"
-			st.GetRunningPods(namespaceDirectoryName, pod, &daterange, optionalFlag)
+			st.GetRunningPods(namespaceDirectoryName, pod, &dateRange, optionalFlag)
 			actualFlag := utils.PerformSanitization(namespaceDirectoryName)
 			if diff := cmp.Diff(actualFlag, test.expectedFlag); diff != "" {
 				t.Errorf("%T differ (-got, +want): %s", test.expectedFlag, diff)

@@ -36,7 +36,7 @@ type PowerFlexStruct struct {
 }
 
 // GetRunningPods is overridden for PowerFlex specific implementation
-func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, daterange *metav1.Time, optionalFlag string) {
+func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, dateRange *metav1.Time, optionalFlag string) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -68,9 +68,9 @@ func (p PowerFlexStruct) GetRunningPods(namespaceDirectoryName string, pod *core
 
 			opts := corev1.PodLogOptions{}
 			opts.Container = pod.Spec.Containers[container].Name
-			if daterange != nil {
-				fmt.Printf("Logs will be collected from: %v\n", daterange)
-				opts.SinceTime = daterange
+			if dateRange != nil {
+				fmt.Printf("Logs will be collected from: %v\n", dateRange)
+				opts.SinceTime = dateRange
 			}
 			req := clientset.CoreV1().Pods(p.namespaceName).GetLogs(pod.Name, &opts)
 			podLogs, err := req.Stream(context.TODO())
@@ -130,12 +130,12 @@ func (p PowerFlexStruct) GetNonRunningPods(namespaceDirectoryName string, pod *c
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string, noofdays int) {
+func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string, noOfDays int) {
 	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
 	GetNodes()
 	podarray := p.GetPods()
-	daterange := GetDateRange(noofdays)
+	dateRange := GetDateRange(noOfDays)
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 	dirName = namespace + "_" + t
@@ -163,7 +163,7 @@ func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string, noofdays
 			continue
 		} else if podallns.Items[pod].Namespace == namespace {
 			if podallns.Items[pod].Status.Phase == RunningPodState {
-				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &daterange, optionalFlag)
+				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &dateRange, optionalFlag)
 			} else {
 				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			}

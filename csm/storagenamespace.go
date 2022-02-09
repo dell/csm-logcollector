@@ -252,7 +252,7 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string, dayscount int) {
+func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string, daysCount int) {
 }
 
 func createDirectory(name string) (dirName string) {
@@ -317,7 +317,7 @@ func (s StorageNameSpaceStruct) DescribePvcs(podName string, describerSettings d
 }
 
 // GetRunningPods collects log of the running pod in given namespace
-func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, daterange *metav1.Time, optionalFlag string) {
+func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, dateRange *metav1.Time, optionalFlag string) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
@@ -337,9 +337,9 @@ func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, po
 
 			opts := corev1.PodLogOptions{}
 			opts.Container = pod.Spec.Containers[container].Name
-			if daterange != nil {
-				fmt.Printf("Logs will be collected from: %v \n", daterange)
-				opts.SinceTime = daterange
+			if dateRange != nil {
+				fmt.Printf("Logs will be collected from: %v \n", dateRange)
+				opts.SinceTime = dateRange
 			}
 			req := clientset.CoreV1().Pods(s.namespaceName).GetLogs(pod.Name, &opts)
 			podLogs, err := req.Stream(context.TODO())
