@@ -16,6 +16,7 @@ package csm
 import (
 	"archive/tar"
 	"bufio"
+	"bytes"
 	"context"
 	utils "csm-logcollector/utils"
 	"flag"
@@ -48,11 +49,11 @@ var snsLog, logfile = utils.GetLogger()
 
 // StorageNameSpace interface declares log collection methods
 type StorageNameSpace interface {
-	GetLogs(string, string)
+	GetLogs(string, string, int)
 	GetPods() []string
 	GetDriverDetails(string) (string, string, string)
 	GetLeaseDetails() string
-	GetRunningPods(string, *corev1.Pod)
+	GetRunningPods(string, *corev1.Pod, *metav1.Time, string)
 	GetNonRunningPods(string, *corev1.Pod)
 	DescribePods(string, describe.DescriberSettings, string)
 	DescribePvcs(string, describe.DescriberSettings, string)
@@ -72,6 +73,7 @@ var clusterIPAddress string
 var clusterUsername string
 var clusterPassword string
 var clientset kubernetes.Interface
+var currentdate string
 
 // SetClientSetFromConfig creates ClientSet object
 func SetClientSetFromConfig() kubernetes.Interface {
@@ -250,7 +252,7 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string) {
+func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string, daysCount int) {
 }
 
 func createDirectory(name string) (dirName string) {
@@ -315,17 +317,53 @@ func (s StorageNameSpaceStruct) DescribePvcs(podName string, describerSettings d
 }
 
 // GetRunningPods collects log of the running pod in given namespace
-func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod) {
+func (s StorageNameSpaceStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, dateRange *metav1.Time, optionalFlag string) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
 	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
 	dirName = namespaceDirectoryName + "/" + pod.Name
 	podDirectoryName := createDirectory(dirName)
 
-	str := "Pod " + pod.Name + " is in running state\n"
-	filename := pod.Name + ".txt"
-	captureLOG(podDirectoryName, filename, str)
-	fmt.Println()
+	if optionalFlag == "False" || optionalFlag == "false" {
+		str := "Pod " + pod.Name + " is in running state\n"
+		filename := pod.Name + ".txt"
+		captureLOG(podDirectoryName, filename, str)
+		fmt.Println()
+	} else {
+		for container := range pod.Spec.Containers {
+			fmt.Printf("\t Collecting Logs from container %s\n", pod.Spec.Containers[container].Name)
+			dirName = podDirectoryName + "/" + pod.Spec.Containers[container].Name
+			containerDirectoryName := createDirectory(dirName)
+
+			opts := corev1.PodLogOptions{}
+			opts.Container = pod.Spec.Containers[container].Name
+			if dateRange != nil {
+				fmt.Printf("Logs will be collected from: %v \n", dateRange)
+				opts.SinceTime = dateRange
+			}
+			req := clientset.CoreV1().Pods(s.namespaceName).GetLogs(pod.Name, &opts)
+			podLogs, err := req.Stream(context.TODO())
+			if err != nil {
+				snsLog.Errorf("Opening stream for pod %s in namespace %s failed with error: %s", pod.Name, pod.Namespace, err.Error())
+			}
+
+			defer func() {
+				if err := podLogs.Close(); err != nil {
+					snsLog.Fatalf("Error streaming file with error %s \n", err.Error())
+				}
+			}()
+
+			buf := new(bytes.Buffer)
+			_, err = io.Copy(buf, podLogs)
+			if err != nil {
+				snsLog.Errorf("Error in copy information from podLogs to buf: %s", err.Error())
+			}
+			str := buf.String()
+
+			filename := pod.Name + "-" + pod.Spec.Containers[container].Name + ".txt"
+			captureLOG(containerDirectoryName, filename, str)
+		}
+	}
 }
 
 // GetNonRunningPods collects log of the nonrunning pod in given namespace
@@ -367,6 +405,46 @@ func captureLOG(repoName string, filename string, content string) {
 	if (buferr != nil) || (wrerr != nil) {
 		snsLog.Fatalf("error in writing logfile")
 	}
+}
+
+// GetDateRange returns date range bassed on user input
+func GetDateRange(noOfDays int) metav1.Time {
+
+	materNode := ""
+	var sinceTime metav1.Time
+	if noOfDays > 0 {
+		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			snsLog.Fatalf("Error while getting nodes: %s", err.Error())
+		}
+		for _, element := range nodes.Items {
+
+			for _, taint := range element.Spec.Taints {
+				fmt.Printf("Taint Key: %s , Value %s\n", taint.Key, taint.Value)
+				if strings.Contains(taint.Key, "master") {
+					materNode = element.Name
+					break
+				}
+			}
+		}
+		if materNode != "" {
+			leaseList, leaseerr := clientset.CoordinationV1().Leases("").List(context.TODO(), metav1.ListOptions{})
+			if err != nil {
+				snsLog.Fatalf("Error while getting leases: %s", leaseerr.Error())
+			}
+
+			for _, lease := range leaseList.Items {
+				if strings.Contains(lease.Name, materNode) {
+					var t = lease.Spec.RenewTime.AddDate(0, 0, -noOfDays)
+					sinceTime = metav1.NewTime(t.Local())
+					fmt.Printf("Meta date now %v ", metav1.Now())
+					break
+				}
+			}
+		}
+	}
+	return sinceTime
+
 }
 
 // ReadConfigFile reads the application configuration file

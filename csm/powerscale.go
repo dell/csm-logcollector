@@ -32,12 +32,12 @@ type PowerScaleStruct struct {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (p PowerScaleStruct) GetLogs(namespace string, optionalFlag string) {
+func (p PowerScaleStruct) GetLogs(namespace string, optionalFlag string, noOfDays int) {
 	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
 	fmt.Println("\n*******************************************************************************")
 	GetNodes()
 	podarray := p.GetPods()
-
+	dateRange := GetDateRange(noOfDays)
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 	dirName = namespace + "_" + t
@@ -67,7 +67,7 @@ func (p PowerScaleStruct) GetLogs(namespace string, optionalFlag string) {
 			continue
 		} else if podallns.Items[pod].Namespace == namespace {
 			if podallns.Items[pod].Status.Phase == RunningPodState {
-				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod])
+				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &dateRange, optionalFlag)
 			} else {
 				p.GetNonRunningPods(namespaceDirectoryName, &podallns.Items[pod])
 			}
