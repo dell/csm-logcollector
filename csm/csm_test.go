@@ -431,8 +431,8 @@ func TestPowermaxLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			dayscount := -1
-			pmax.GetLogs(test.namespace, "true", dayscount)
+			daysCount := -1
+			pmax.GetLogs(test.namespace, "true", daysCount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -470,8 +470,8 @@ func TestPowerscaleLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			dayscount := -1
-			pscale.GetLogs(test.namespace, "true", dayscount)
+			daysCount := -1
+			pscale.GetLogs(test.namespace, "true", daysCount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -510,8 +510,8 @@ func TestPowerflexLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			dayscount := -1
-			pflx.GetLogs(test.namespace, "true", dayscount)
+			daysCount := -1
+			pflx.GetLogs(test.namespace, "true", daysCount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -550,8 +550,8 @@ func TestUnityLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			dayscount := -1
-			unity.GetLogs(test.namespace, "true", dayscount)
+			daysCount := -1
+			unity.GetLogs(test.namespace, "true", daysCount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -589,8 +589,8 @@ func TestPowerstoreLogs(t *testing.T) {
 			_ = CreateNamespace(clientset, "ns-2")
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
-			dayscount := -1
-			pstore.GetLogs(test.namespace, "true", dayscount)
+			daysCount := -1
+			pstore.GetLogs(test.namespace, "true", daysCount)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
