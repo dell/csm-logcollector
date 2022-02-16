@@ -17,6 +17,7 @@ import (
 	"csm-logcollector/csm"
 	utils "csm-logcollector/utils"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -100,7 +101,7 @@ func main() {
 
 	count = 4
 	for count > 0 {
-		fmt.Println("Optional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
+		fmt.Println("\nOptional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
 		_, err := fmt.Scanln(&optionalFlag)
 		if err != nil {
 			logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
@@ -113,29 +114,34 @@ func main() {
 
 	CheckCount(count)
 
-	if strings.Contains(temp, "isilon") || strings.Contains(temp, "powerscale") {
+	driveOption := ""
+	fmt.Println("Please select the respective storage array for which CSI Driver logs need to be collected:")
+	fmt.Println("1: PowerScale/Isilon\n2: Unity\n3: PowerStore\n4: PowerMax\n5: PowerFlex/VxFlexOS")
+	fmt.Println("\nPlease enter your choice (e.g. enter '1' for PowerScale) :")
+	fmt.Scanln(&driveOption)
+	driveChoice, _ := strconv.Atoi(driveOption)
+	if driveChoice < 1 || driveChoice > 5 {
+		fmt.Println("Invalid choice, please enter correct choice")
+	}
+
+	switch {
+	case driveChoice == 1:
 		p = csm.PowerScaleStruct{}
-	} else if strings.Contains(temp, "unity") {
+	case driveChoice == 2:
 		p = csm.UnityStruct{}
-	} else if strings.Contains(temp, "powerstore") {
+	case driveChoice == 3:
 		p = csm.PowerStoreStruct{}
-	} else if strings.Contains(temp, "powermax") {
+	case driveChoice == 4:
 		p = csm.PowerMaxStruct{}
-	} else if strings.Contains(temp, "vxflexos") || strings.Contains(temp, "powerflex") {
+	case driveChoice == 5:
 		p = csm.PowerFlexStruct{}
-	}
-
-	noofdays := -1
-	if optionalFlag == "True" || optionalFlag == "true" {
-		fmt.Println("Enter the no of days the logs need to be collected from today: ")
-		_, errdays := fmt.Scanln(&noofdays)
-		if errdays != nil {
-			logger.Fatalf("Entering number of days failed with error: %s", errdays.Error())
+	default:
+		{
+			fmt.Println("Invalid choice, please enter valid choice")
+			logger.Fatalf("Invalid Driver Name, exiting Application")
 		}
-		fmt.Printf("Logs will be collected for past %d days from today\n", noofdays)
 	}
-
-	p.GetLogs(temp, optionalFlag, noofdays)
+	p.GetLogs(temp, optionalFlag)
 }
 
 // CheckNamespace verifies if given namespace exists
