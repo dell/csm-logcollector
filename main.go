@@ -17,6 +17,7 @@ import (
 	"csm-logcollector/csm"
 	utils "csm-logcollector/utils"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -44,7 +45,18 @@ func main() {
 		logger.Fatalf("Exiting the application as consent is not provided.")
 	}
 
-	fmt.Println("Enter the namespace: ")
+	driveOption := ""
+	fmt.Println("Please select the respective storage array for which CSI Driver logs need to be collected:")
+	fmt.Println("1: PowerScale/Isilon\n2: Unity\n3: PowerStore\n4: PowerMax\n5: PowerFlex/VxFlexOS")
+	fmt.Println("\nPlease enter your choice (e.g. enter '1' for PowerScale) :")
+	_, err = fmt.Scanln(&driveOption)
+	driveChoice, err := strconv.Atoi(driveOption)
+	if err != nil || driveChoice < 1 || driveChoice > 5 {
+		fmt.Println("Invalid choice, please enter correct choice")
+		logger.Fatalf("Entering CSI Driver name failed")
+	}
+
+	fmt.Println("\nEnter the namespace: ")
 	_, errns := fmt.Scanln(&namespace)
 	if errns != nil {
 		logger.Fatalf("Entering namespace failed with error: %s", errns.Error())
@@ -99,8 +111,9 @@ func main() {
 	CheckCount(count)
 
 	count = 4
+
 	for count > 0 {
-		fmt.Println("Optional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
+		fmt.Println("\nOptional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
 		_, err := fmt.Scanln(&optionalFlag)
 		if err != nil {
 			logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
@@ -113,29 +126,37 @@ func main() {
 
 	CheckCount(count)
 
-	if strings.Contains(temp, "isilon") || strings.Contains(temp, "powerscale") {
-		p = csm.PowerScaleStruct{}
-	} else if strings.Contains(temp, "unity") {
-		p = csm.UnityStruct{}
-	} else if strings.Contains(temp, "powerstore") {
-		p = csm.PowerStoreStruct{}
-	} else if strings.Contains(temp, "powermax") {
-		p = csm.PowerMaxStruct{}
-	} else if strings.Contains(temp, "vxflexos") || strings.Contains(temp, "powerflex") {
-		p = csm.PowerFlexStruct{}
-	}
-
-	noofdays := -1
+	daysUserIp := ""
+	noOfDays := -1
 	if optionalFlag == "True" || optionalFlag == "true" {
 		fmt.Println("Enter the no of days the logs need to be collected from today: ")
-		_, errdays := fmt.Scanln(&noofdays)
-		if errdays != nil {
-			logger.Fatalf("Entering number of days failed with error: %s", errdays.Error())
+		_, err := fmt.Scanln(&daysUserIp)
+		noOfDays, err = strconv.Atoi(daysUserIp)
+		if err != nil || noOfDays <= 0 {
+			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
 		}
-		fmt.Printf("Logs will be collected for past %d days from today\n", noofdays)
+		fmt.Printf("Logs will be collected for past %d days from today\n", noOfDays)
 	}
 
-	p.GetLogs(temp, optionalFlag, noofdays)
+	switch {
+	case driveChoice == 1:
+		p = csm.PowerScaleStruct{}
+	case driveChoice == 2:
+		p = csm.UnityStruct{}
+	case driveChoice == 3:
+		p = csm.PowerStoreStruct{}
+	case driveChoice == 4:
+		p = csm.PowerMaxStruct{}
+	case driveChoice == 5:
+		p = csm.PowerFlexStruct{}
+	default:
+		{
+			fmt.Println("Invalid choice, please enter valid choice")
+			logger.Fatalf("Invalid Driver Name, exiting Application")
+		}
+	}
+
+	p.GetLogs(temp, optionalFlag, noOfDays)
 }
 
 // CheckNamespace verifies if given namespace exists
