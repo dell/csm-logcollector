@@ -126,12 +126,12 @@ func main() {
 
 	CheckCount(count)
 
-	daysUserIp := ""
+	daysUserInput := ""
 	noOfDays := -1
 	if optionalFlag == "True" || optionalFlag == "true" {
 		fmt.Println("Enter the no of days the logs need to be collected from today: ")
-		_, err := fmt.Scanln(&daysUserIp)
-		noOfDays, err = strconv.Atoi(daysUserIp)
+		_, err := fmt.Scanln(&daysUserInput)
+		noOfDays, err = strconv.Atoi(daysUserInput)
 		if err != nil || noOfDays <= 0 {
 			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
 		}
@@ -152,7 +152,7 @@ func main() {
 	default:
 		{
 			fmt.Println("Invalid choice, please enter valid choice")
-			logger.Fatalf("Invalid Driver Name, exiting Application")
+			logger.Fatalf("Invalid choice, exiting Application")
 		}
 	}
 
