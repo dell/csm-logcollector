@@ -53,7 +53,7 @@ func main() {
 	driveChoice, err := strconv.Atoi(driveOption)
 	if err != nil || driveChoice < 1 || driveChoice > 5 {
 		fmt.Println("Invalid choice, please enter correct choice")
-		logger.Fatalf("Entering CSI Driver name failed")
+		logger.Fatalf("Entering CSI Driver choice failed")
 	}
 
 	fmt.Println("\nEnter the namespace: ")
