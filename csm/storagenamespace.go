@@ -206,9 +206,9 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 			if pod.Status.Phase == RunningPodState {
 				for container := range pod.Spec.Containers {
 					if pod.Spec.Containers[container].Name == "driver" {
-						driverName = pod.Spec.Containers[container].Name
 						image := pod.Spec.Containers[container].Image
 						splitString := strings.SplitN(image, ":", 2)
+						driverName = splitString[0]
 						driverVersion = splitString[1]
 					}
 				}
