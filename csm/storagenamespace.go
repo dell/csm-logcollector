@@ -47,11 +47,22 @@ const (
 // Logging object
 var snsLog, logfile = utils.GetLogger()
 
+//GetDriver - Get the CSI driver storage system
+func GetDriver(i int) string {
+	// Declare related array of string to compare each storage system csi driver with an index
+	StorageSystemCSIDriver := [5]string{"PowerScale", "Unity", "PowerStore", "PowerMax", "VxFlexOS"}
+	driver := ""
+	if i > 0 && i <= 5 {
+		driver = strings.ToLower(StorageSystemCSIDriver[i-1])
+	}
+	return driver
+}
+
 // StorageNameSpace interface declares log collection methods
 type StorageNameSpace interface {
-	GetLogs(string, string, int)
+	GetLogs(string, string, int, int)
 	GetPods() []string
-	GetDriverDetails(string) (string, string, string)
+	GetDriverDetails(string) (string, string, string, int)
 	GetLeaseDetails() string
 	GetRunningPods(string, *corev1.Pod, *metav1.Time, string)
 	GetNonRunningPods(string, *corev1.Pod)
@@ -191,7 +202,7 @@ func (s StorageNameSpaceStruct) GetPods() []string {
 }
 
 // GetDriverDetails populates the CSI driver fields
-func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, string, string) {
+func (s StorageNameSpaceStruct) GetDriverDetails(namespace string, driverStorageSystem int) (string, string, string) {
 	// Get CSI driver info for a particular namespace
 	fmt.Println("\n\nDRIVER INFO..............")
 	fmt.Println("=========================")
@@ -215,14 +226,19 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string) (string, stri
 			}
 		}
 	}
-
 	s.namespaceName = namespace
 	s.drivername = driverName
 	s.driverversion = driverVersion
-	fmt.Printf("\tNamespace: \t%s\n", s.namespaceName)
-	fmt.Printf("\tDriver name: \t%s\n", s.drivername)
-	fmt.Printf("\tDriver version: %s\n", s.driverversion)
-	snsLog.Debugf("Driver details listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
+	driverStorage := GetDriver(driverStorageSystem)
+	if strings.Contains(s.drivername, driverStorage) {
+		fmt.Printf("\tNamespace: \t%s\n", s.namespaceName)
+		fmt.Printf("\tDriver name: \t%s\n", s.drivername)
+		fmt.Printf("\tDriver version: %s\n", s.driverversion)
+		snsLog.Debugf("Driver details listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
+	} else {
+		fmt.Printf("\nFailed to find CSI Driver %s installed in namespace  %s\n", driverStorage, s.namespaceName)
+		fmt.Printf("Driver specific logs will not be collected\n")
+	}
 	return namespace, driverName, driverVersion
 }
 
@@ -267,14 +283,14 @@ func createDirectory(name string) (dirName string) {
 	return name
 }
 
-// DescribePods describes the pods in the given namespace
-func (s StorageNameSpaceStruct) DescribePods(podName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
-	d := describe.PodDescriber{Interface: clientset}
-	DescribePodDetails, err := d.Describe(s.namespaceName, podName, describerSettings)
+// DescribeNode - describes the node for a given cluster
+func (s StorageNameSpaceStruct) DescribeNode(nodeName string, describerSettings describe.DescriberSettings, podDirectoryName string) {
+	d := describe.NodeDescriber{Interface: clientset}
+	DescribePodDetails, err := d.Describe(s.namespaceName, nodeName, describerSettings)
 	if err != nil {
-		snsLog.Fatalf("Describing pod %s in namespace %s failed with error: %s", podName, s.namespaceName, err.Error())
+		snsLog.Fatalf("Describing Node %s in namespace %s failed with error: %s", nodeName, s.namespaceName, err.Error())
 	}
-	filename := podName + "-describe.txt"
+	filename := nodeName + "-describe.txt"
 	captureLOG(podDirectoryName, filename, DescribePodDetails)
 }
 
@@ -296,7 +312,6 @@ func (s StorageNameSpaceStruct) DescribePvcs(podName string, describerSettings d
 					break
 				}
 			}
-
 			if result {
 				break
 			}

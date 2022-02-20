@@ -129,10 +129,10 @@ func main() {
 	daysUserInput := ""
 	noOfDays := -1
 	if optionalFlag == "True" || optionalFlag == "true" {
-		fmt.Println("Enter the no of days the logs need to be collected from today: ")
+		fmt.Println("Enter the no of days the logs need to be collected from today (to skip this filter enter 0) :")
 		_, err := fmt.Scanln(&daysUserInput)
 		noOfDays, err = strconv.Atoi(daysUserInput)
-		if err != nil || noOfDays <= 0 {
+		if err != nil || noOfDays < 0 || noOfDays > 180 {
 			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
 		}
 		fmt.Printf("Logs will be collected for past %d days from today\n", noOfDays)
@@ -156,7 +156,7 @@ func main() {
 		}
 	}
 
-	p.GetLogs(temp, optionalFlag, noOfDays)
+	p.GetLogs(temp, optionalFlag, noOfDays, driveChoice)
 }
 
 // CheckNamespace verifies if given namespace exists
