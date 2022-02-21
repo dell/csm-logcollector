@@ -34,14 +34,16 @@ func main() {
 	var result bool
 	var nsSlice []string
 	var p csm.StorageNameSpace
+	var err error
 	const consentMsg string = "As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)"
 
 	fmt.Println(consentMsg)
-	_, err := fmt.Scanln(&consent)
+	_, err = fmt.Scanln(&consent)
 	if err != nil {
 		logger.Fatalf("Getting concent from user failed with error: %s", err.Error())
 	}
 	if consent != "Y" && consent != "y" {
+		fmt.Println("\nExiting the application as the user consent is not granted.")
 		logger.Fatalf("Exiting the application as consent is not provided.")
 	}
 
@@ -133,7 +135,12 @@ func main() {
 		_, err := fmt.Scanln(&daysUserInput)
 		noOfDays, err = strconv.Atoi(daysUserInput)
 		if err != nil || noOfDays < 0 || noOfDays > 180 {
+			fmt.Println("Invalid number of days, please enter between 1 to 180.")
 			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
+		}
+
+		if noOfDays == 0 {
+			noOfDays = 180
 		}
 		fmt.Printf("Logs will be collected for past %d days from today\n", noOfDays)
 	}
@@ -177,6 +184,7 @@ func CheckNamespace(namespace string, namespaces []string) (bool, []string) {
 // CheckCount verifies if retries are exceeded
 func CheckCount(count int) {
 	if count == 0 {
+		fmt.Printf("All retries are exceeded.")
 		panic("All retries are exceeded.")
 	}
 }

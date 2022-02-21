@@ -59,20 +59,29 @@ func (p PowerStoreStruct) GetLeaseDetails() string {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string, noOfDays int) {
-	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
+func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string, noOfDays int, driverStorageSystem int) {
+	p.namespaceName, _, _ = p.GetDriverDetails(namespace, driverStorageSystem)
 	fmt.Println("\n*******************************************************************************")
-	GetNodes()
-	podarray := p.GetPods()
-	dateRange := GetDateRange(noOfDays)
-	fmt.Printf("Daterange: %s\n", dateRange)
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 	dirName = namespace + "_" + t
-	namespaceDirectoryName := createDirectory(dirName)
+	namespaceRootDirName := createDirectory(dirName)
+	namespaceDirectoryName := ""
+
+	//Capturing describe nodes
+	nodes := GetNodes()
+	for _, node := range nodes {
+		dirName = namespaceRootDirName + "/" + node
+		namespaceDirectoryName = createDirectory(dirName)
+		p.DescribeNode(node, describe.DescriberSettings{ShowEvents: true}, dirName)
+	}
+	//Capturing describe pods
+	podarray := p.GetPods()
+	dateRange := GetDateRange(noOfDays)
+	fmt.Printf("Daterange: %s\n", dateRange)
 
 	for _, pod := range podarray {
-		dirName = namespaceDirectoryName + "/" + pod
+		dirName = namespaceRootDirName + "/" + pod
 		podDirectoryName := createDirectory(dirName)
 		p.DescribePods(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 		if optionalFlag == "True" || optionalFlag == "true" {
@@ -111,6 +120,7 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string, noOfDay
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
+		fmt.Printf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 		psLog.Fatalf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 	}
 }
