@@ -90,7 +90,7 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noOfDays int
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
-		fmt.Printf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
+		fmt.Printf("Creating tarball %s failed with error: %s\n", namespaceDirectoryName, errMsg.Error())
 		unityLog.Fatalf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 	}
 }

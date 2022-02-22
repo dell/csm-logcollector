@@ -120,7 +120,7 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string, noOfDay
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
-		fmt.Printf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
+		fmt.Printf("Creating tarball %s failed with error: %s\n", namespaceDirectoryName, errMsg.Error())
 		psLog.Fatalf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 	}
 }

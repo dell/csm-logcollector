@@ -160,7 +160,6 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noOfDays 
 			p.DescribePvcs(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 		}
 	}
-
 	LeaseHolder = p.GetLeaseDetails()
 	fmt.Println("\n*******************************************************************************")
 
@@ -196,7 +195,7 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noOfDays 
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
-		fmt.Printf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
+		fmt.Printf("Creating tarball %s failed with error: %s\n", namespaceDirectoryName, errMsg.Error())
 		pmaxLog.Fatalf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 	}
 }

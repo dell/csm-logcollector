@@ -51,10 +51,10 @@ var snsLog, logfile = utils.GetLogger()
 //GetDriver - Get the CSI driver storage system
 func GetDriver(i int) string {
 	// Declare related array of string to compare each storage system csi driver with an index
-	StorageSystemCSIDriver := [5]string{"PowerScale", "Unity", "PowerStore", "PowerMax", "VxFlexOS"}
+	StorageSystemCSIDriver := [5]string{"POWERSCALE", "UNITY", "POWERSTORE", "POWERMAX", "VXFLEXOS"}
 	driver := ""
 	if i > 0 && i <= 5 {
-		driver = strings.ToLower(StorageSystemCSIDriver[i-1])
+		driver = StorageSystemCSIDriver[i-1]
 	}
 	return driver
 }
@@ -230,13 +230,13 @@ func (s StorageNameSpaceStruct) GetDriverDetails(namespace string, driverStorage
 	s.drivername = driverName
 	s.driverversion = driverVersion
 	driverStorage := GetDriver(driverStorageSystem)
-	if strings.Contains(s.drivername, driverStorage) {
+	if strings.Contains(s.drivername, strings.ToLower(driverStorage)) {
 		fmt.Printf("\tNamespace: \t%s\n", s.namespaceName)
 		fmt.Printf("\tDriver name: \t%s\n", s.drivername)
 		fmt.Printf("\tDriver version: %s\n", s.driverversion)
 		snsLog.Debugf("Driver details listed: %s, %s, %s", s.namespaceName, s.drivername, s.driverversion)
 	} else {
-		fmt.Printf("\nFailed to find CSI Driver %s installed in namespace  %s\n", driverStorage, s.namespaceName)
+		fmt.Printf("\nNo CSI Driver for %s storage system found in namespace  %s\n", driverStorage, s.namespaceName)
 		fmt.Printf("Driver specific logs will not be collected\n")
 	}
 	return namespace, driverName, driverVersion

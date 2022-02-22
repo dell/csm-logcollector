@@ -131,7 +131,7 @@ func main() {
 	daysUserInput := ""
 	noOfDays := -1
 	if optionalFlag == "True" || optionalFlag == "true" {
-		fmt.Println("Enter the no of days the logs need to be collected from today (to skip this filter enter 0) :")
+		fmt.Println("Enter the number of days the logs need to be collected from today (to skip this filter enter 0) :")
 		_, err := fmt.Scanln(&daysUserInput)
 		noOfDays, err = strconv.Atoi(daysUserInput)
 		if err != nil || noOfDays < 0 || noOfDays > 180 {
@@ -185,6 +185,6 @@ func CheckNamespace(namespace string, namespaces []string) (bool, []string) {
 func CheckCount(count int) {
 	if count == 0 {
 		fmt.Printf("All retries are exceeded.")
-		panic("All retries are exceeded.")
+		logger.Fatalf("All retries are exceeded.")
 	}
 }
