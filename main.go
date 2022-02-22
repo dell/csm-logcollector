@@ -40,12 +40,9 @@ func main() {
 
 	fmt.Println(consentMsg)
 	ipCount, err = fmt.Scanln(&consent)
-	if err != nil {
-		logger.Fatalf("Getting concent from user failed with error: %s", err.Error())
-	}
-	if (consent != "Y" && consent != "y") || ipCount <= 0 {
-		fmt.Println("\nExiting the application as the user consent is not granted.")
-		logger.Fatalf("Exiting the application as consent is not provided.")
+	if (err != nil || consent != "Y" && consent != "y") || ipCount == 0 {
+		fmt.Println("\nExiting the application as the user consent is not granted or invalid input")
+		logger.Fatalf("Exiting the application as consent is not provided or invalid input.")
 	}
 
 	driveOption := ""
@@ -119,6 +116,7 @@ func main() {
 		fmt.Println("\nOptional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
 		ipCount, err = fmt.Scanln(&optionalFlag)
 		if err != nil || ipCount <= 0 {
+			fmt.Printf("Getting Optiona log user input failed with error: %s\n", err.Error())
 			logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
 		}
 		if optionalFlag == "True" || optionalFlag == "true" || optionalFlag == "False" || optionalFlag == "false" {

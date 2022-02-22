@@ -38,21 +38,21 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noOfDays int
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 	dirName = namespace + "_" + t
-	namespaceRootDirName := createDirectory(dirName)
-	namespaceDirectoryName := ""
+	namespaceDirectoryName := createDirectory(dirName)
+	nodeDirectoryName := ""
 
 	//Capturing describe nodes
 	nodes := GetNodes()
 	for _, node := range nodes {
-		dirName = namespaceRootDirName + "/" + node
-		namespaceDirectoryName = createDirectory(dirName)
-		p.DescribeNode(node, describe.DescriberSettings{ShowEvents: true}, dirName)
+		dirName = namespaceDirectoryName + "/" + node
+		nodeDirectoryName = createDirectory(dirName)
+		p.DescribeNode(node, describe.DescriberSettings{ShowEvents: true}, nodeDirectoryName)
 	}
 	//Capturing describe pods
 	podarray := p.GetPods()
 	dateRange := GetDateRange(noOfDays)
 	for _, pod := range podarray {
-		dirName = namespaceRootDirName + "/" + pod
+		dirName = namespaceDirectoryName + "/" + pod
 		podDirectoryName := createDirectory(dirName)
 		p.DescribePods(pod, describe.DescriberSettings{ShowEvents: true}, podDirectoryName)
 		if optionalFlag == "True" || optionalFlag == "true" {
