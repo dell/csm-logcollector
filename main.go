@@ -116,8 +116,10 @@ func main() {
 		fmt.Println("\nOptional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
 		ipCount, err = fmt.Scanln(&optionalFlag)
 		if err != nil || ipCount <= 0 {
-			fmt.Printf("Getting Optiona log user input failed with error: %s\n", err.Error())
-			logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
+			fmt.Printf("Invalid input or failed to get user input. Please retry !!")
+			if count <= 0 {
+				logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
+			}
 		}
 		if optionalFlag == "True" || optionalFlag == "true" || optionalFlag == "False" || optionalFlag == "false" {
 			break
@@ -131,9 +133,9 @@ func main() {
 	noOfDays := -1
 	if optionalFlag == "True" || optionalFlag == "true" {
 		fmt.Println("Enter the number of days the logs need to be collected from today (to skip this filter enter 0) :")
-		ipCount, err = fmt.Scanln(&daysUserInput)
-		noOfDays, err = strconv.Atoi(daysUserInput)
-		if err != nil || noOfDays < 0 || noOfDays > 180 || ipCount <= 0 {
+		ipCount, inputErr := fmt.Scanln(&daysUserInput)
+		noOfDays, intErr := strconv.Atoi(daysUserInput)
+		if inputErr != nil || intErr != nil || noOfDays < 0 || noOfDays > 180 || ipCount <= 0 {
 			fmt.Println("Invalid number of days, please enter between 1 to 180.")
 			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
 		}
@@ -183,7 +185,7 @@ func CheckNamespace(namespace string, namespaces []string) (bool, []string) {
 // CheckCount verifies if retries are exceeded
 func CheckCount(count int) {
 	if count == 0 {
-		fmt.Printf("\nAll retries are exceeded.")
+		fmt.Printf("\nAll retries are exceeded.\n")
 		logger.Fatalf("All retries are exceeded.")
 	}
 }
