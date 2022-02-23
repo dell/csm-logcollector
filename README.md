@@ -8,13 +8,13 @@ You may obtain a copy of the License at
     http://www.apache.org/licenses/LICENSE-2.0
 -->
 
-# Dell EMC Container Storage Modules (CSM) Log Collector
+# Dell Container Storage Modules (CSM) Log Collector
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](docs/CODE_OF_CONDUCT.md)
 [![License](https://img.shields.io/github/license/dell/csm)](LICENSE)
 
 
-Dell EMC Container Storage Modules (CSM) Log Collector is an open-source application designed to collect the logs of Dell EMC CSM products.
+Dell Container Storage Modules (CSM) Log Collector is an open-source application designed to collect the logs of Dell EMC CSM products.
 
 ## Supported Platforms
    | **Log collector** | **CSI Drivers** | **Operating System**|
@@ -81,6 +81,6 @@ For any CSM log collector issues, questions or feedback, please follow our [supp
 
 ## About
 
-Dell EMC Container Storage Modules (CSM) Log Collection application is 100% open source and community-driven. All components are available
+Dell Container Storage Modules (CSM) Log Collection application is 100% open source and community-driven. All components are available
 under [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0.html) on
 GitHub.
