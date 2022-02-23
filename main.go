@@ -59,6 +59,7 @@ func main() {
 	fmt.Println("\nEnter the namespace: ")
 	_, errns := fmt.Scanln(&namespace)
 	if errns != nil {
+		fmt.Printf("\nEntering namespace failed with error %s \n", errns.Error())
 		logger.Fatalf("Entering namespace failed with error: %s", errns.Error())
 	}
 	temp := strings.ToLower(namespace)
