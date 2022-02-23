@@ -32,17 +32,25 @@ type UnityStruct struct {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noOfDays int) {
-	p.namespaceName, _, _ = p.GetDriverDetails(namespace)
+func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noOfDays int, driverStorageSystem int) {
+	p.namespaceName, _, _ = p.GetDriverDetails(namespace, driverStorageSystem)
 	fmt.Println("\n*******************************************************************************")
-	GetNodes()
-	podarray := p.GetPods()
-	dateRange := GetDateRange(noOfDays)
 	var dirName string
 	t := time.Now().Format("20060102150405") //YYYYMMDDhhmmss
 	dirName = namespace + "_" + t
 	namespaceDirectoryName := createDirectory(dirName)
+	nodeDirectoryName := ""
 
+	//Capturing describe nodes
+	nodes := GetNodes()
+	for _, node := range nodes {
+		dirName = namespaceDirectoryName + "/" + node
+		nodeDirectoryName = createDirectory(dirName)
+		p.DescribeNode(node, describe.DescriberSettings{ShowEvents: true}, nodeDirectoryName)
+	}
+	//Capturing describe pods
+	podarray := p.GetPods()
+	dateRange := GetDateRange(noOfDays)
 	for _, pod := range podarray {
 		dirName = namespaceDirectoryName + "/" + pod
 		podDirectoryName := createDirectory(dirName)
@@ -82,6 +90,7 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noOfDays int
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
+		fmt.Printf("Creating tarball %s failed with error: %s\n", namespaceDirectoryName, errMsg.Error())
 		unityLog.Fatalf("Creating tarball %s failed with error: %s", namespaceDirectoryName, errMsg.Error())
 	}
 }

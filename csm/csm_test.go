@@ -108,7 +108,7 @@ func TestGetDriverDetails(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
 			clientset = fake.NewSimpleClientset(test.objs...)
-			gotNamespace, _, _ := st.GetDriverDetails("csi-powerstore")
+			gotNamespace, _, _ := st.GetDriverDetails("csi-powerstore", 3)
 			if diff := cmp.Diff(gotNamespace, test.expectedNamespace); diff != "" {
 				t.Errorf("%T differ (-got, +want): %s", test.expectedNamespace, diff)
 				return
@@ -432,7 +432,7 @@ func TestPowermaxLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			daysCount := -1
-			pmax.GetLogs(test.namespace, "true", daysCount)
+			pmax.GetLogs(test.namespace, "true", daysCount, 4)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -471,7 +471,7 @@ func TestPowerscaleLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			daysCount := -1
-			pscale.GetLogs(test.namespace, "true", daysCount)
+			pscale.GetLogs(test.namespace, "true", daysCount, 1)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -511,7 +511,7 @@ func TestPowerflexLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			daysCount := -1
-			pflx.GetLogs(test.namespace, "true", daysCount)
+			pflx.GetLogs(test.namespace, "true", daysCount, 5)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -551,7 +551,7 @@ func TestUnityLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			daysCount := -1
-			unity.GetLogs(test.namespace, "true", daysCount)
+			unity.GetLogs(test.namespace, "true", daysCount, 2)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {
@@ -590,7 +590,7 @@ func TestPowerstoreLogs(t *testing.T) {
 			_ = CreatePod(clientset, test.namespace, test.podName, "attacher")
 			_ = CreateLease(clientset, test.leaseName, test.namespace, test.podName)
 			daysCount := -1
-			pstore.GetLogs(test.namespace, "true", daysCount)
+			pstore.GetLogs(test.namespace, "true", daysCount, 3)
 			files, _ := ioutil.ReadDir(currentPath)
 			for _, file := range files {
 				if strings.Contains(file.Name(), test.namespace) {

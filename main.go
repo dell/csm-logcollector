@@ -34,24 +34,24 @@ func main() {
 	var result bool
 	var nsSlice []string
 	var p csm.StorageNameSpace
+	var err error
+	var ipCount int
 	const consentMsg string = "As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)"
 
 	fmt.Println(consentMsg)
-	_, err := fmt.Scanln(&consent)
-	if err != nil {
-		logger.Fatalf("Getting concent from user failed with error: %s", err.Error())
-	}
-	if consent != "Y" && consent != "y" {
-		logger.Fatalf("Exiting the application as consent is not provided.")
+	ipCount, err = fmt.Scanln(&consent)
+	if (err != nil || consent != "Y" && consent != "y") || ipCount == 0 {
+		fmt.Println("\nExiting the application as the user consent is not granted or invalid input")
+		logger.Fatalf("Exiting the application as consent is not provided or invalid input.")
 	}
 
 	driveOption := ""
 	fmt.Println("Please select the respective storage array for which CSI Driver logs need to be collected:")
 	fmt.Println("1: PowerScale/Isilon\n2: Unity\n3: PowerStore\n4: PowerMax\n5: PowerFlex/VxFlexOS")
 	fmt.Println("\nPlease enter your choice (e.g. enter '1' for PowerScale) :")
-	_, err = fmt.Scanln(&driveOption)
+	ipCount, err = fmt.Scanln(&driveOption)
 	driveChoice, err := strconv.Atoi(driveOption)
-	if err != nil || driveChoice < 1 || driveChoice > 5 {
+	if err != nil || driveChoice < 1 || driveChoice > 5 || ipCount <= 0 {
 		fmt.Println("Invalid choice, please enter correct choice")
 		logger.Fatalf("Entering CSI Driver choice failed")
 	}
@@ -59,6 +59,7 @@ func main() {
 	fmt.Println("\nEnter the namespace: ")
 	_, errns := fmt.Scanln(&namespace)
 	if errns != nil {
+		fmt.Printf("\nEntering namespace failed with error %s \n", errns.Error())
 		logger.Fatalf("Entering namespace failed with error: %s", errns.Error())
 	}
 	temp := strings.ToLower(namespace)
@@ -114,9 +115,12 @@ func main() {
 
 	for count > 0 {
 		fmt.Println("\nOptional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
-		_, err := fmt.Scanln(&optionalFlag)
-		if err != nil {
-			logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
+		ipCount, err = fmt.Scanln(&optionalFlag)
+		if err != nil || ipCount <= 0 {
+			fmt.Printf("Invalid input or failed to get user input. Please retry !!")
+			if count <= 0 {
+				logger.Fatalf("Getting Optiona log user input failed with error: %s", err.Error())
+			}
 		}
 		if optionalFlag == "True" || optionalFlag == "true" || optionalFlag == "False" || optionalFlag == "false" {
 			break
@@ -129,11 +133,16 @@ func main() {
 	daysUserInput := ""
 	noOfDays := -1
 	if optionalFlag == "True" || optionalFlag == "true" {
-		fmt.Println("Enter the no of days the logs need to be collected from today: ")
-		_, err := fmt.Scanln(&daysUserInput)
-		noOfDays, err = strconv.Atoi(daysUserInput)
-		if err != nil || noOfDays <= 0 {
+		fmt.Println("Enter the number of days the logs need to be collected from today (to skip this filter enter 0) :")
+		ipCount, inputErr := fmt.Scanln(&daysUserInput)
+		noOfDays, intErr := strconv.Atoi(daysUserInput)
+		if inputErr != nil || intErr != nil || noOfDays < 0 || noOfDays > 180 || ipCount <= 0 {
+			fmt.Println("Invalid number of days, please enter between 1 to 180.")
 			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
+		}
+
+		if noOfDays == 0 {
+			noOfDays = 180
 		}
 		fmt.Printf("Logs will be collected for past %d days from today\n", noOfDays)
 	}
@@ -156,7 +165,7 @@ func main() {
 		}
 	}
 
-	p.GetLogs(temp, optionalFlag, noOfDays)
+	p.GetLogs(temp, optionalFlag, noOfDays, driveChoice)
 }
 
 // CheckNamespace verifies if given namespace exists
@@ -177,6 +186,7 @@ func CheckNamespace(namespace string, namespaces []string) (bool, []string) {
 // CheckCount verifies if retries are exceeded
 func CheckCount(count int) {
 	if count == 0 {
-		panic("All retries are exceeded.")
+		fmt.Printf("\nAll retries are exceeded.\n")
+		logger.Fatalf("All retries are exceeded.")
 	}
 }
