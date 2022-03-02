@@ -21,7 +21,7 @@ Currently, the logs of CSI drivers can only be collected.
 ## Supported Platforms
    | **Log collector** | **CSI Drivers** | **Operating System**|
 |---------------------|-----------------------|------------------------------|
-| v1.2.0 | PowerMax <br> PowerScale <br> PowerStore <br> Unity <br> VxflexOs|Ubuntu 18.04  <br> RHEL 8.4 |
+| v1.1.0 | PowerMax <br> PowerScale <br> PowerStore <br> Unity <br> VxflexOs|Ubuntu 18.04  <br> RHEL 8.4 |
 
 ## Support
 For any CSM log collector issues, questions or feedback, please follow our [support process](https://github.com/dell/csm/blob/main/docs/SUPPORT.md)
@@ -37,7 +37,7 @@ For any CSM log collector issues, questions or feedback, please follow our [supp
 
   3. Alternatively, Clone the repo using the command:
 
-    git clone https://github.com/dell/csm-logcollector/tree/1.2.0
+    git clone https://github.com/dell/csm-logcollector/tree/1.1.0
 
   4. Go to the root directory of go.mod
 
