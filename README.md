@@ -14,47 +14,52 @@ You may obtain a copy of the License at
 [![License](https://img.shields.io/github/license/dell/csm)](LICENSE)
 
 
-Dell Container Storage Modules (CSM) Log Collector is an open-source application designed to collect the logs of Dell EMC CSM products.
+Dell Container Storage Modules (CSM) Log Collector is an open-source application designed to collect the logs of Dell CSM and CSI drivers.
+Currently, the logs of CSI drivers can only be collected.
+
 
 ## Supported Platforms
-   | **Log collector** | **CSI Drivers** | **Operating System**|
-|---------------------|-----------------------|------------------------------|
-| v1.0.0 | PowerMax <br> PowerScale <br> PowerStore <br> Unity <br> VxflexOs|Ubuntu 18.04  <br> RHEL 8.4 |
+   | **Log collector** | **CSI Drivers** | **Operating System**|**Kubernetes**|
+|---------------------|-----------------------|------------------------------|------------------------------|
+| v1.0.0 | PowerMax, <br> PowerScale, <br> PowerStore, <br> Unity, <br> PowerFlex| RHEL 8.4, <br> SLES 15.3, <br> Ubuntu 18.04| 1.21, <br> 1.22
 
 ## Support
-For any CSM log collector issues, questions or feedback, please follow our [support process](https://github.com/dell/csm/blob/main/docs/SUPPORT.md)
+Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by creating a [GitHub Issue](https://github.com/dell/csm-logcollector/issues) for any CSM log collector issues, questions or feedback.
 
-## Installing Application
+## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
 
-    docker pull amaas-eos-mw1.cec.lab.emc.com:5092/csm-logcollector:v1.0.0
+    docker pull quay.io/arindam_datta/csm-logcollector
 
   2. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
-  config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  
+  3. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  
+  4. To execute the application, please refer [Using Application](#using-application) section.
 
-  3. Alternatively, Clone the repo using the command:
+## Installing application via GitHub
+  1. Alternatively, Clone the repo using the command:
 
     git clone https://github.com/dell/csm-logcollector/tree/1.0.0
 
-  4. Go to the root directory of go.mod
+  2. Go to the root directory of go.mod
 
-  5. Execute the following command to install run-time dependencies:
+  3. Execute the following command to install run-time dependencies:
 
     go mod tidy
-
-  6. To execute the application, please refer [Using Application](#using-application) section.
-
-  <b>Note</b>: <br>
-  Currently, it is available on the internal registry. We will point it to docker hub, once it is available.
+  
+  4. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  
+  5. To execute the application, please refer [Using Application](#using-application) section.
 
 ## Configuration
   1. The config.yml contains generic configuration which are necessary to execute the application.
   
   2. The config.yml should be located at the root folder of the application.
-  Each item in this file is described as below. 
+  Each item in this file is described below. 
 
-  3. <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. It is mandatory parameter which specifies the details about remote Kubernetes cluster. It includes following sub-fields.
+ * <b>kubeconfig_details</b>: Includes the Kubernetes configuration file path, Cluster IP and credentials required to connect to the Kubernetes cluster. It is a mandatory parameter which specifies the details about remote Kubernetes cluster. It includes following sub-fields.
       * path: The absolute path of the Kubernetes config file. If not specified, by default, application will look for config file at <home_directory_of_user>/.kube folder.
       * ip_address: The IP address of the remote Kubernetes cluster.
       * username: The username required to connect to the remote Kubernetes cluster.
@@ -70,17 +75,26 @@ For any CSM log collector issues, questions or feedback, please follow our [supp
       * csi-powerflex: CSI driver path for PowerFlex.
 
 ## Using Application
-  1. To run the application in the container, navigate to the root folder and run the following command:
+  * To run the application in the container, navigate to the root folder and run the following command:
+    
+        ./csm-logcollector
 
-    ./csm-logcollector
+  * If the repo is cloned from the source, run the following command:
 
-  2. If the repo is cloned from the source, run the following command:
+        go run main.go
 
-    go run main.go
-
-
+## Features
+* The log collector application collects the following logs from the cluster:
+    * List of all namespaces.
+    * Get pods in a namespace.
+    * Describe nodes in a cluster.
+    * Describe pod in a namespace.
+* When the optional logs option is passed as True then the following will be added into the logs:
+    * Describe pvc in a namespace.
+    * Date filter to get the logs of past 180 days at max.
+    * Describe running pod in namespace.
+    
 ## About
 
-Dell Container Storage Modules (CSM) Log Collection application is 100% open source and community-driven. All components are available
-under [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0.html) on
-GitHub.
+Dell Container Storage Modules (CSM) Log Collection application is completely open source and community-driven application. All components are available
+under [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0.html) on GitHub.
