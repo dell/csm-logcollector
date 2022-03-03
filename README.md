@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2022 Dell Inc., or its subsidiaries. All Rights Reserved.
+Copyright (c) 2021 Dell Inc., or its subsidiaries. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,33 +19,39 @@ Currently, the logs of CSI drivers can only be collected.
 
 
 ## Supported Platforms
-   | **Log collector** | **CSI Drivers** | **Operating System**|
-|---------------------|-----------------------|------------------------------|
-| v1.1.0 | PowerMax <br> PowerScale <br> PowerStore <br> Unity <br> VxflexOs| SLES 15.3  <br> RHEL 8.4 |
+   | **Log collector** | **CSI Drivers** | **Operating System**|**Kubernetes**|
+|---------------------|-----------------------|------------------------------|------------------------------|
+| v1.0.0 | PowerMax, <br> PowerScale, <br> PowerStore, <br> Unity, <br> PowerFlex| RHEL 8.4, <br> SLES 15.3, <br> Ubuntu 18.04| 1.21, <br> 1.22
 
 ## Support
 Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by creating a [GitHub Issue](https://github.com/dell/csm-logcollector/issues) for any CSM log collector issues, questions or feedback.
 
-## Installing Application
+## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
 
-    docker pull quay.io/arindam_datta/csm-logcollector:latest
+    docker pull quay.io/arindam_datta/csm-logcollector
 
   2. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
-  config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  
+  3. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  
+  4. To execute the application, please refer [Using Application](#using-application) section.
 
-  3. Alternatively, Clone the repo using the command:
+## Installing application via GitHub
+  1. Alternatively, Clone the repo using the command:
 
-    git clone https://github.com/dell/csm-logcollector/tree/1.1.0
+    git clone https://github.com/dell/csm-logcollector/tree/1.0.0
 
-  4. Go to the root directory of go.mod
+  2. Go to the root directory of go.mod
 
-  5. Execute the following command to install run-time dependencies:
+  3. Execute the following command to install run-time dependencies:
 
     go mod tidy
-
-  6. To execute the application, please refer [Using Application](#using-application) section.
+  
+  4. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  
+  5. To execute the application, please refer [Using Application](#using-application) section.
 
 ## Configuration
   1. The config.yml contains generic configuration which are necessary to execute the application.
@@ -69,17 +75,26 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
       * csi-powerflex: CSI driver path for PowerFlex.
 
 ## Using Application
-  1. To run the application in the container, navigate to the root folder and run the following command:
+  * To run the application in the container, navigate to the root folder and run the following command:
+    
+        ./csm-logcollector
 
-    ./csm-logcollector
+  * If the repo is cloned from the source, run the following command:
 
-  2. If the repo is cloned from the source, run the following command:
+        go run main.go
 
-    go run main.go
-
-
+## Features
+* The log collector application collects the following logs from the cluster:
+    * List of all namespaces.
+    * Get pods in a namespace.
+    * Describe nodes in a cluster.
+    * Describe pod in a namespace.
+* When the optional logs option is passed as True then the following will be added into the logs:
+    * Describe pvc in a namespace.
+    * Date filter to get the logs of past 180 days at max.
+    * Describe running pod in namespace.
+    
 ## About
 
-Dell Container Storage Modules (CSM) Log Collection application is a completely open source and community-driven application. All components are available
-under [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0.html) on
-GitHub.
+Dell Container Storage Modules (CSM) Log Collection application is completely open source and community-driven application. All components are available
+under [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0.html) on GitHub.
