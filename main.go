@@ -132,10 +132,12 @@ func main() {
 
 	daysUserInput := ""
 	noOfDays := -1
+	var intErr error
+
 	if optionalFlag == "True" || optionalFlag == "true" {
 		fmt.Println("Enter the number of days the logs need to be collected from today (to skip this filter enter 0) :")
 		ipCount, inputErr := fmt.Scanln(&daysUserInput)
-		noOfDays, intErr := strconv.Atoi(daysUserInput)
+		noOfDays, intErr = strconv.Atoi(daysUserInput)
 		if inputErr != nil || intErr != nil || noOfDays < 0 || noOfDays > 180 || ipCount <= 0 {
 			fmt.Println("Invalid number of days, please enter between 1 to 180.")
 			logger.Fatalf("Invalid number of days, please enter between 1 to 180.")
