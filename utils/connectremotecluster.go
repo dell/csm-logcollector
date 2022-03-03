@@ -16,8 +16,6 @@ package utils
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
 	"os"
@@ -25,6 +23,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 
 	"gopkg.in/yaml.v2"
 )
@@ -92,7 +93,8 @@ func Connect(user, password, host string, port int) (*sftp.Client, error) {
 	addr = fmt.Sprintf("%s:%d", host, port)
 	sshClient, err = ssh.Dial("tcp", addr, clientConfig)
 	if err != nil {
-		panic("Failed to dial: " + err.Error())
+		fmt.Println("Failed to connect with remote cluster, please verify remote cluster details and credentials")
+		remoteClusterLog.Fatalf("Failed to connect with remote cluster with error %s" + err.Error())
 	}
 	remoteClusterLog.Info("Successfully connected to ssh server.")
 
@@ -154,7 +156,8 @@ func ScpConfigFile(kubeconfigPath string, clusterIPAddress string, clusterUserna
 		if strings.Contains(remoteFilePath, "samples") || strings.Contains(remoteFilePath, "secret") {
 			remoteClusterLog.Infof("Content parsing skipped for the file %s, %s", remoteFilePath, err)
 		} else {
-			remoteClusterLog.Fatalf("Error: %s", err)
+			fmt.Printf("Failed to read file: %s with error %s \n", remoteFilePath, err.Error())
+			remoteClusterLog.Fatalf("Failed to read file: %s with error %s", remoteFilePath, err.Error())
 		}
 	} else {
 		// create the destination file

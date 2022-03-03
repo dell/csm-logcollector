@@ -342,7 +342,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 		if maskingFlag {
 			fmt.Printf("Masking sensitive content completed.\n")
 		} else {
-			fmt.Printf("No sensitive content identified.\n")
+			fmt.Printf("Sanitization not performed, either it was not opted or no sensitive content present found.\n")
 		}
 	}
 	return maskingFlag
