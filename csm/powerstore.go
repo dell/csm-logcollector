@@ -90,10 +90,9 @@ func (p PowerStoreStruct) GetLogs(namespace string, optionalFlag string, noOfDay
 	}
 
 	p.GetLeaseDetails()
-	// access the API to get driver/sidecarpod logs of RUNNING pods
+	// access the API to get driver/sidecarpod logs of RUNNING/NOT RUNNING pods
 
-	fmt.Printf("Optional flag: %s\n", optionalFlag)
-	fmt.Println("\n\nCollecting RUNNING POD LOGS (driver logs, sidecar logs)..........")
+	fmt.Println("\n\nCollecting POD Logs (driver logs, sidecar logs)..........")
 
 	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {

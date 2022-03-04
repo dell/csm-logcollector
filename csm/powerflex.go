@@ -158,8 +158,8 @@ func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string, noOfDays
 		}
 	}
 	p.GetLeaseDetails()
-	fmt.Printf("\nOptional flag: %s", optionalFlag)
-	fmt.Println("\nCollecting Running Pod Logs (driver logs, sidecar logs)")
+
+	fmt.Println("\nCollecting Pod Logs (driver logs, sidecar logs)")
 
 	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {

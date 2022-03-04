@@ -45,6 +45,10 @@ const (
 	RunningPodState = "Running"
 )
 
+const (
+	masterNodeRole = "node-role.kubernetes.io/master"
+)
+
 // Logging object
 var snsLog, logfile = utils.GetLogger()
 
@@ -185,7 +189,7 @@ func (s StorageNameSpaceStruct) GetPods() []string {
 	// access the API to list Pods of a particular namespace
 	clientset := GetClientSetFromConfig()
 	fmt.Printf("\n\nList of pods for %s..............\n", s.namespaceName)
-	fmt.Println("======================================")
+	fmt.Printf("\n======================================\n")
 	podList, err := clientset.CoreV1().Pods(s.namespaceName).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		snsLog.Fatalf("Getting pods in namespace %s failed with error: %s", s.namespaceName, err.Error())
@@ -196,7 +200,7 @@ func (s StorageNameSpaceStruct) GetPods() []string {
 	for i := 0; i < len(podList.Items); i++ {
 		podarray[i] = podList.Items[i].Name
 	}
-	fmt.Println(podarray)
+	fmt.Printf("\n%s\n", podarray)
 	snsLog.Debugf("Pods in namespace %s listed: %s", s.namespaceName, podarray)
 	return podarray
 }
@@ -436,7 +440,7 @@ func captureLOG(repoName string, filename string, content string) {
 // GetDateRange returns date range bassed on user input
 func GetDateRange(noOfDays int) metav1.Time {
 
-	materNode := ""
+	masterNode := ""
 	var sinceTime metav1.Time
 	if noOfDays > 0 {
 		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
@@ -444,33 +448,30 @@ func GetDateRange(noOfDays int) metav1.Time {
 			snsLog.Fatalf("Error while getting nodes: %s", err.Error())
 		}
 		for _, element := range nodes.Items {
-
-			for _, taint := range element.Spec.Taints {
-				fmt.Printf("Taint Key: %s , Value %s\n", taint.Key, taint.Value)
-				if strings.Contains(taint.Key, "master") {
-					materNode = element.Name
+			node, _ := clientset.CoreV1().Nodes().Get(context.TODO(), element.Name, metav1.GetOptions{})
+			for _, element := range nodes.Items {
+				if _, ok := node.Labels[masterNodeRole]; ok {
+					masterNode = element.Name
 					break
 				}
 			}
 		}
-		if materNode != "" {
+		if masterNode != "" {
 			leaseList, leaseerr := clientset.CoordinationV1().Leases("").List(context.TODO(), metav1.ListOptions{})
 			if err != nil {
 				snsLog.Fatalf("Error while getting leases: %s", leaseerr.Error())
 			}
-
 			for _, lease := range leaseList.Items {
-				if strings.Contains(lease.Name, materNode) {
+				if strings.Contains(lease.Name, masterNode) {
+					fmt.Printf("Date filter will be based in the current time on Node : %s \n", masterNode)
 					var t = lease.Spec.RenewTime.AddDate(0, 0, -noOfDays)
 					sinceTime = metav1.NewTime(t.Local())
-					fmt.Printf("Meta date now %v ", metav1.Now())
 					break
 				}
 			}
 		}
 	}
 	return sinceTime
-
 }
 
 // ReadConfigFile reads the application configuration file

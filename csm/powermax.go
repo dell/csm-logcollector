@@ -41,7 +41,7 @@ var LeaseHolder string
 func (p PowerMaxStruct) GetRunningPods(namespaceDirectoryName string, pod *corev1.Pod, dateRange *metav1.Time, optionalFlag string) {
 	var dirName string
 	fmt.Printf("pod.Name........%s\n", pod.Name)
-	fmt.Printf("pod.Status.Phase.......%s\n", pod.Status.Phase)
+	fmt.Printf("pod status phase.......%s\n", pod.Status.Phase)
 	dirName = namespaceDirectoryName + "/" + pod.Name
 	podDirectoryName := createDirectory(dirName)
 
@@ -163,17 +163,14 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noOfDays 
 	LeaseHolder = p.GetLeaseDetails()
 	fmt.Println("\n*******************************************************************************")
 
-	fmt.Printf("\nOptional flag: %s", optionalFlag)
-	fmt.Println("\nCollecting Running Pod Logs (driver logs, sidecar logs)")
+	fmt.Println("\nCollecting Pod Logs (driver logs, sidecar logs)")
 
 	podallns, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		pmaxLog.Fatalf("Getting all pods failed with error: %s", err.Error())
 	}
 	for pod := range podallns.Items {
-		if podallns.Items[pod].Namespace != namespace {
-			continue
-		} else if podallns.Items[pod].Namespace == namespace {
+		if podallns.Items[pod].Namespace == namespace {
 			if podallns.Items[pod].Status.Phase == RunningPodState {
 				p.GetRunningPods(namespaceDirectoryName, &podallns.Items[pod], &dateRange, optionalFlag)
 				fmt.Println("\t*************************************************************")
@@ -190,8 +187,7 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noOfDays 
 	ok := utils.PerformSanitization(namespaceDirectoryName)
 	if !ok {
 		pmaxLog.Warnf("Sanitization not performed for %s driver.", namespace)
-	}
-
+	}	
 	errMsg := createTarball(namespaceDirectoryName, ".")
 
 	if errMsg != nil {
