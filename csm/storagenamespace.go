@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"context"
 	utils "csm-logcollector/utils"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -629,9 +628,6 @@ func createTarball(source string, target string) error {
 		}
 
 		err = os.Rename(target, destinationPath)
-	} else {
-		err = errors.New("invalid destination_path in config.yml")
-
 	}
 	if err != nil {
 		snsLog.Errorf("Moving file %s failed with error: %s", target, err.Error())
