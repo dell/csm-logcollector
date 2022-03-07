@@ -55,10 +55,24 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
 ## Offline installation
 
-  1. Download the docker image on a system that has internet access and copy it to the system where the tool is to be executed. Then follow the same steps as mentioned [here](#installing-application-via-docker-image) for execution.
+  1. Download the docker image on a system that has internet access. 
 
     docker pull quay.io/arindam_datta/csm-logcollector
 
+  2. Save the Docker image as a tar file
+  
+    docker save -o <tar-filename>.tar quay.io/arindam_datta/csm-logcollector
+
+  3. Copy the image to other system with regular file transfer tools such as cp, scp, etc.
+  
+    scp <tar-filename>.tar root@10.xxx.xxx.xxx:<path-for-tar-file>
+  
+  4. Load the image into Docker:
+
+    docker load -i <path-for-tar-file>/<tar-filename>.tar
+  
+  4. Then follow the same steps from step 2 onwards as mentioned [here](#installing-application-via-docker-image) for execution.
+  
 ## Configuration
   1. The config.yml contains generic configuration which are necessary to execute the application.
   
