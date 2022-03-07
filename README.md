@@ -66,6 +66,8 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
   3. Copy the image to other system with regular file transfer tools such as cp, scp, etc.
   
     scp <tar-filename>.tar root@10.xxx.xxx.xxx:<path-for-tar-file>
+    
+  _Note: User might need to give credentials for successful authentication._
   
   4. Load the image into Docker:
 
