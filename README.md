@@ -53,6 +53,28 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
   
   5. To execute the application, please refer [Using Application](#using-application) section.
 
+## Offline installation
+
+  1. Download the docker image on a system that has internet access. 
+
+    docker pull quay.io/arindam_datta/csm-logcollector
+
+  2. Save the Docker image as a tar file
+  
+    docker save -o <tar-filename>.tar quay.io/arindam_datta/csm-logcollector
+
+  3. Copy the image to other system with regular file transfer tools such as cp, scp, etc.
+  
+    scp <tar-filename>.tar root@10.xxx.xxx.xxx:<path-for-tar-file>
+    
+  _Note: User might need to give credentials for successful authentication._
+  
+  4. Load the image into Docker:
+
+    docker load -i <path-for-tar-file>/<tar-filename>.tar
+  
+  4. Then follow the same steps from step 2 onwards as mentioned [here](#installing-application-via-docker-image) for execution.
+  
 ## Configuration
   1. The config.yml contains generic configuration which are necessary to execute the application.
   
@@ -65,7 +87,7 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
       * username: The username required to connect to the remote Kubernetes cluster.
       * password: The password required to connect to the remote Kubernetes cluster.
 
-  3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter.
+  3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter. If not given then the tarball will be generated at the root location of the tool.
 
   4. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field. If not provided, log sanitization will be skipped. It includes following sub-fields.
       * csi-unity: CSI driver path for Unity.
