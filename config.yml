@@ -4,9 +4,9 @@ kubeconfig_details:
   username: "root"
   password: "xxxxxxxx"
 destination_path: "/home"
-driver_path:
-  csi-unity: "/root/csi-unity"
-  csi-powerstore: "/root/csi-powerstore"
-  csi-powerscale: "/root/csi-powerscale"
-  csi-powermax: "/root/csi-powermax"
-  csi-powerflex: "/root/csi-powerflex"
+#driver_path:
+#  csi-unity: "/root/csi-unity"
+#  csi-powerstore: "/root/csi-powerstore"
+#  csi-powerscale: "/root/csi-powerscale"
+#  csi-powermax: "/root/csi-powermax"
+#  csi-powerflex: "/root/csi-powerflex"
