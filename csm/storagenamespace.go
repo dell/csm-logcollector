@@ -490,7 +490,11 @@ func ReadConfigFile() {
 
 		for k, v := range data {
 			if k == "destination_path" {
-				destinationPath = fmt.Sprintf("%s", v)
+				destinationPath, ok1 := v.(string)
+				if !ok1 {
+					fmt.Printf("Please provide valid values in config.yml for key: '%s'\n", k)
+					snsLog.Fatalf("value is not string!")
+				}
 				snsLog.Infof("destination path: %s", destinationPath)
 			}
 
@@ -498,6 +502,7 @@ func ReadConfigFile() {
 				// To access kubeconfig_details, assert type of data["kubeconfig_details"] to map[interface{}]interface{}
 				kubeconfigDetails, ok := data["kubeconfig_details"].(map[interface{}]interface{})
 				if !ok {
+					fmt.Printf("Please provide valid values in config.yml for key: '%s'\n", k)
 					snsLog.Fatalf("kubeconfig_details is not a map!")
 				}
 
@@ -506,6 +511,7 @@ func ReadConfigFile() {
 					key, ok1 := key.(string)
 					value, ok2 := value.(string)
 					if !ok1 || !ok2 {
+						fmt.Printf("Please provide valid values in config.yml for key: '%s'\n", key)
 						snsLog.Fatalf("key/value is not string!")
 					}
 					if len(strings.TrimSpace(value)) != 0 {

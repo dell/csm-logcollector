@@ -56,6 +56,7 @@ func GetSecretFilePath() []string {
 				value, ok1 := value.(string)
 				key, ok2 := key.(string)
 				if !ok1 || !ok2 {
+					fmt.Printf("Please provide valid values in config.yml for key: '%s'\n", key)
 					sanityLog.Fatalf("key/value is not string!")
 				}
 
