@@ -39,6 +39,14 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
   4. To execute the application, please refer [Using Application](#using-application) section.
 
 ## Installing application via GitHub
+
+---
+**NOTE**
+
+Please make sure to use the latest go version(1.17.x).
+
+---
+
   1. Alternatively, Clone the repo using the command:
 
     git clone https://github.com/dell/csm-logcollector/tree/1.0.0
