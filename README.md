@@ -29,14 +29,26 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 ## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
+     
+     **Note**:As a prerequisite docker should be installed & running.
 
     docker pull quay.io/arindam_datta/csm-logcollector
 
-  2. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
+  2. Run the docker image.
+        
+    docker run -it quay.io/arindam_datta/csm-logcollector    
+    
+  3. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
   
-  3. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
+  4. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
   
-  4. To execute the application, please refer [Using Application](#using-application) section.
+  5. To execute the application please refer [Using Application](#using-application) section.
+  
+  6. Upon successful execution archive containing the logs will be created in the desired folder with latest date time stamp. Now this archieve can be copied to required system from here.
+  
+  7. After the archieve is copied, this docker container can be exited using below command.
+  
+    exit
 
 ## Installing application via GitHub
 
@@ -97,7 +109,7 @@ Please make sure to use the latest go version(1.17.x).
 
   3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter. If not given then the tarball will be generated at the root location of the tool.
 
-  4. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field. If not provided, log sanitization will be skipped. It includes following sub-fields.
+  4. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field and required only if log sanitization is to be performed. Any sensitive data like credentials, ip, fqdn etc. present in the files pointing to below mentioned paths will be masked. It includes following sub-fields.
       * csi-unity: CSI driver path for Unity.
       * csi-powerstore: CSI driver path for PowerStore.
       * csi-powerscale: CSI driver path for PowerScale.
@@ -105,7 +117,7 @@ Please make sure to use the latest go version(1.17.x).
       * csi-powerflex: CSI driver path for PowerFlex.
 
 ## Using Application
-  * To run the application in the container, navigate to the root folder and run the following command:
+  * To run the application in the container, navigate to the '/root/csm-logcollector' folder and run the following command:
     
         ./csm-logcollector
 
