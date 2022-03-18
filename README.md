@@ -116,7 +116,7 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
   * To run the application in the container, navigate to the '/root/csm-logcollector' folder and run the following command:
     
     **Note**:Please make sure to set PATH.
-             example: export PATH=$PATH:/usr/local/go/bin
+             **example: export PATH=$PATH:/usr/local/go/bin**
     
         ./csm-logcollector
 
