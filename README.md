@@ -32,7 +32,7 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
      
      **Note**:As a prerequisite docker should be installed & running.
 
-    docker pull quay.io/arindam_datta/csm-logcollector
+    docker pull dellemc/csm-log-collector
 
   2. Run the docker image.
         
