@@ -26,11 +26,14 @@ Currently, the logs of CSI drivers can only be collected.
 ## Support
 Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by creating a [GitHub Issue](https://github.com/dell/csm-logcollector/issues) for any CSM log collector issues, questions or feedback.
 
+## Prerequisites
+  
+  * docker
+  * go 1.17.2
+  
 ## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
-     
-     **Note**:As a prerequisite docker should be installed & running.
 
     docker pull dellemc/csm-log-collector
 
@@ -52,13 +55,6 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
 ## Installing application via GitHub
 
----
-**NOTE**
-
-Please make sure to use the latest go version(1.17.x).
-
----
-
   1. Alternatively, Clone the repo using the command:
 
     git clone https://github.com/dell/csm-logcollector/tree/1.0.0
@@ -77,11 +73,11 @@ Please make sure to use the latest go version(1.17.x).
 
   1. Download the docker image on a system that has internet access. 
 
-    docker pull quay.io/arindam_datta/csm-logcollector
+    docker pull dellemc/csm-log-collector
 
   2. Save the Docker image as a tar file
   
-    docker save -o <tar-filename>.tar quay.io/arindam_datta/csm-logcollector
+    docker save -o <tar-filename>.tar dellemc/csm-log-collector
 
   3. Copy the image to other system with regular file transfer tools such as cp, scp, etc.
   
@@ -118,6 +114,9 @@ Please make sure to use the latest go version(1.17.x).
 
 ## Using Application
   * To run the application in the container, navigate to the '/root/csm-logcollector' folder and run the following command:
+    
+    **Note**:Please make sure to set PATH.
+             **example: export PATH=$PATH:/usr/local/go/bin**
     
         ./csm-logcollector
 
