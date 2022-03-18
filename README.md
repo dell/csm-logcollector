@@ -26,6 +26,9 @@ Currently, the logs of CSI drivers can only be collected.
 ## Support
 Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by creating a [GitHub Issue](https://github.com/dell/csm-logcollector/issues) for any CSM log collector issues, questions or feedback.
 
+## Prerequisites
+  * go 1.17.2
+
 ## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
