@@ -22,11 +22,12 @@ import (
 )
 
 var logger, _ = utils.GetLogger()
+var version = "development"
 
 func main() {
 	logger.Info("Log started for csm-logcollector")
-	fmt.Println("\n\n\tCSM Logging Tool!")
-	fmt.Println("\t=================")
+	fmt.Printf("\n\n\tCSM Log Collector, version: %s\n", version)
+	fmt.Println("\t=================================")
 	fmt.Println()
 	var consent string
 	var namespace string

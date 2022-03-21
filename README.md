@@ -28,12 +28,13 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
 ## Prerequisites
   
-  * docker
   * go 1.17.2
   
 ## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
+
+     **Note**:As a prerequisite docker should be installed & running.
 
     docker pull dellemc/csm-log-collector
 
@@ -88,8 +89,8 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
   4. Load the image into Docker:
 
     docker load -i <path-for-tar-file>/<tar-filename>.tar
-  
-  4. Then follow the same steps from step 2 onwards as mentioned [here](#installing-application-via-docker-image) for execution.
+
+  5. Then follow the same steps from step 2 onwards as mentioned [here](#installing-application-via-docker-image) for execution.
   
 ## Configuration
   1. The config.yml contains generic configuration which are necessary to execute the application.
@@ -114,10 +115,7 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
 ## Using Application
   * To run the application in the container, navigate to the '/root/csm-logcollector' folder and run the following command:
-    
-    **Note**:Please make sure to set PATH.
-             **example: export PATH=$PATH:/usr/local/go/bin**
-    
+
         ./csm-logcollector
 
   * If the repo is cloned from the source, run the following command:
