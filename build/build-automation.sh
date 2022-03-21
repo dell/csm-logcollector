@@ -6,7 +6,7 @@ go mod tidy
 version="v0.0.${BUILD_NUMBER}"
 cp config.yml "$WORKSPACE/build/."
 cp README.md "$WORKSPACE/build/."
-go build -o "$WORKSPACE/build/csm-logcollector"
+go build -o "$WORKSPACE/build/csm-logcollector" -ldflags "-X 'main.version=1.0.0'"
 # scp config and docker files to build agent's Workspace
 sshpass -p "dangerous" scp -o StrictHostKeyChecking=no root@10.247.66.65:/home/akash/golang_app/Dockerfile $WORKSPACE
 sshpass -p "dangerous" scp -o StrictHostKeyChecking=no root@10.247.66.65:/home/akash/golang_app/build/config.yml $WORKSPACE

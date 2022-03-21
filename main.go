@@ -22,10 +22,10 @@ import (
 )
 
 var logger, _ = utils.GetLogger()
-var Version = "development"
+var version = "development"
 
 func main() {
-	fmt.Printf("Version: %s\n", Version)
+	fmt.Printf("Version: %s\n", version)
 	logger.Info("Log started for csm-logcollector")
 	fmt.Println("\n\n\tCSM Logging Tool!")
 	fmt.Println("\t=================")
