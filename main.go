@@ -26,7 +26,7 @@ var version = "development"
 
 func main() {
 	logger.Info("Log started for csm-logcollector")
-	fmt.Printf("\n\n\tCSM Log Collector, version: %s\n", version )
+	fmt.Printf("\n\n\tCSM Log Collector, version: %s\n", version)
 	fmt.Println("\t=================================")
 	fmt.Println()
 	var consent string
