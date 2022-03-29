@@ -23,5 +23,7 @@ docker push quay.io/arindam_datta/csm-logcollector
 docker push quay.io/arindam_datta/csm-logcollector:"${version}"
 docker pull quay.io/arindam_datta/csm-logcollector:"${version}"
 # dellemc docker registry
+docker tag csm-logcollector dellemc/csm-log-collector
+docker push dellemc/csm-log-collector
 docker tag csm-logcollector dellemc/csm-log-collector:"${version}"
 docker push dellemc/csm-log-collector:"${version}"
