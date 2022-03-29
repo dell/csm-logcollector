@@ -42,7 +42,9 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
         
     docker run -it dellemc/csm-log-collector 
     
-  3. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
+  3. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector), one configuration file(config.yml) and a readme file.
+
+    cd /root/csm-logcollector
   
   4. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
   
