@@ -23,6 +23,9 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	"client k8s.io/kubernetes/pkg/client/unversioned"
 )
 
 // Logging object
@@ -270,6 +273,23 @@ func GetRemoteSecretFiles() []string {
 		sanityLog.Warn(err)
 	}
 	return secretFilePaths
+}
+
+// GetSecrets return all secrets in the given namespace.
+func GetSecrets(client *client.Client, namespace string) (*SecretsList,
+	error) {
+	secretsList := &SecretsList{}
+	secrets, err := client.Secrets(namespace).List(api.ListOptions{
+		LabelSelector: labels.Everything(),
+		FieldSelector: fields.Everything(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, secret := range secrets.Items {
+		secretsList.Secrets = append(secretsList.Secrets, secret.ObjectMeta.Name)
+	}
+	return secretsList, err
 }
 
 // PerformSanitization method performs the sanitization of all logs files against the sensitive strings identified
