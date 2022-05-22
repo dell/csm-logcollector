@@ -337,7 +337,7 @@ func GetSecrets(clientset kubernetes.Interface, namespace string) []string {
 			if err != nil {
 				sanityLog.Fatalf("Failed to decode the secret password with error: %s", err)
 			}
-			fmt.Print("\nGot Secrets for Secret Name: %s", secret_name)
+			fmt.Printf("\nGot Secrets for Secret Name: %s", secret_name)
 			secretKeys = append(secretKeys, secret_user, string(secret_password))
 		}
 
