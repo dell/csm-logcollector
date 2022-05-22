@@ -634,7 +634,7 @@ func createTarball(source string, target string) error {
 		return err
 	}
 
-	fmt.Println("Archive created successfully")
+	fmt.Println("\nArchive created successfully")
 
 	// cleanup call
 	cleanup()

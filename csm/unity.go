@@ -82,7 +82,7 @@ func (p UnityStruct) GetLogs(namespace string, optionalFlag string, noOfDays int
 	}
 
 	// Perform sanitization
-	ok := utils.PerformSanitization(namespaceDirectoryName)
+	ok := utils.PerformSanitization(clientset, namespace, namespaceDirectoryName)
 	if !ok {
 		unityLog.Warnf("Sanitization not performed for %s driver.", namespace)
 	}

@@ -626,7 +626,7 @@ func TestPerformSanitization(t *testing.T) {
 			dateRange := meta_v1.Now()
 			optionalFlag := "false"
 			st.GetRunningPods(namespaceDirectoryName, pod, &dateRange, optionalFlag)
-			actualFlag := utils.PerformSanitization(namespaceDirectoryName)
+			actualFlag := utils.PerformSanitization(clientset, "csi_powerstore", namespaceDirectoryName)
 			if diff := cmp.Diff(actualFlag, test.expectedFlag); diff != "" {
 				t.Errorf("%T differ (-got, +want): %s", test.expectedFlag, diff)
 				return

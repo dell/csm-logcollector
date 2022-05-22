@@ -15,6 +15,8 @@ package utils
 
 import (
 	// "csm-logcollector/csm"
+	"context"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -23,9 +25,9 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v2"
-	"k8s.io/apimachinery/pkg/fields"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"client k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Logging object
@@ -81,6 +83,47 @@ func GetSecretFilePath() []string {
 		}
 	}
 	return secretFilePaths
+}
+
+// GetSecretOpted - This method will read the config file to check if getting secrets opted.
+func GetSecretOpted() bool {
+	var use_secrets bool
+	_, err := os.Stat("config.yml")
+	if err == nil {
+		yamlFile, err := ioutil.ReadFile("config.yml")
+		if err != nil {
+			sanityLog.Fatalf("Reading configuration file failed with error %v ", err)
+		}
+		data := make(map[interface{}]interface{})
+		err = yaml.Unmarshal(yamlFile, data)
+		if err != nil {
+			sanityLog.Fatalf("Unmarshalling configuration file failed with error %v", err)
+		}
+		_, secretsKey := data["secrets"]
+		if secretsKey {
+			// To access secrets, assert data to map[interface{}]interface{}
+			secretsKey, ok := data["secrets"].(map[interface{}]interface{})
+			if !ok {
+				sanityLog.Fatalf("secrets is not a map!")
+			}
+			for key, value := range secretsKey {
+				// type assertion from interface{} type to string type
+				value, ok1 := value.(string)
+				key, ok2 := key.(string)
+				if !ok1 || !ok2 {
+					fmt.Printf("Please provide valid values in config.yml for key: '%s'\n", key)
+					sanityLog.Fatalf("key/value is not string!")
+				}
+				if len(strings.TrimSpace(value)) != 0 {
+					// secret.yml file relative path is same for unity, powerscale, powerstore and powermax drivers
+					if key == "use_secrets" {
+						use_secrets = true
+					}
+				}
+			}
+		}
+	}
+	return use_secrets
 }
 
 // ReadSecretFileContent reads the content of secret.yaml
@@ -276,26 +319,43 @@ func GetRemoteSecretFiles() []string {
 }
 
 // GetSecrets return all secrets in the given namespace.
-func GetSecrets(client *client.Client, namespace string) (*SecretsList,
-	error) {
-	secretsList := &SecretsList{}
-	secrets, err := client.Secrets(namespace).List(api.ListOptions{
-		LabelSelector: labels.Everything(),
-		FieldSelector: fields.Everything(),
-	})
+func GetSecrets(clientset kubernetes.Interface, namespace string) []string {
+	var secretKeys []string
+	secretsList, err := clientset.CoreV1().Secrets(namespace).List(context.TODO(), metav1.ListOptions{})
+
 	if err != nil {
-		return nil, err
+		labels.Everything()
+		sanityLog.Fatalf("sanitization against sensitive contents failed with error: %s", err)
 	}
-	for _, secret := range secrets.Items {
-		secretsList.Secrets = append(secretsList.Secrets, secret.ObjectMeta.Name)
+	for _, secret := range secretsList.Items {
+		//strData := secret.String()
+		if secret.Type != "" {
+			secret_name := secret.Name
+			secret_user := secret.Labels["username"]
+			raw_secret_password := secret.Labels["password"]
+			secret_password, err := base64.StdEncoding.DecodeString(string(raw_secret_password))
+			if err != nil {
+				sanityLog.Fatalf("Failed to decode the secret password with error: %s", err)
+			}
+			fmt.Print("\nGot Secrets for Secret Name: %s", secret_name)
+			secretKeys = append(secretKeys, secret_user, string(secret_password))
+		}
+
 	}
-	return secretsList, err
+	return secretKeys
 }
 
 // PerformSanitization method performs the sanitization of all logs files against the sensitive strings identified
-func PerformSanitization(namespaceDirectoryName string) bool {
+func PerformSanitization(clientset kubernetes.Interface, namespace string, namespaceDirectoryName string) bool {
 	var secretFilePaths []string
+	var sensitiveContentList []string
 	var maskingFlag = false
+	if GetSecretOpted() == true {
+		fmt.Print("\nGet Secrets Opted for sanitisation\n")
+		sensitiveContentList = GetSecrets(clientset, namespace)
+	} else {
+		fmt.Print("\nGet Secrets not opted for sanitisation\n")
+	}
 	secretFilePaths = GetSecretFilePath()
 
 	currentIPAddress, err := GetLocalIP()
@@ -317,7 +377,7 @@ func PerformSanitization(namespaceDirectoryName string) bool {
 	if len(secretFilePaths) > 0 {
 		sensitiveKeyList := []string{"arrayId", "username", "password", "endpoint", "clusterName", "globalID", "systemID", "allSystemNames", "mdm"}
 		sanityLog.Infof("sensitiveKeyList: %s", sensitiveKeyList)
-		sensitiveContentList := ReadSecretFileContent(secretFilePaths)
+		sensitiveContentList = append(sensitiveContentList, ReadSecretFileContent(secretFilePaths)...)
 		err := filepath.Walk(namespaceDirectoryName, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				sanityLog.Info(err)

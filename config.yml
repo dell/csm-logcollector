@@ -3,6 +3,8 @@ kubeconfig_details:
   ip_address: "10.xxx.xx.xx"
   username: "root"
   password: "xxxxxxxx"
+secrets:
+  use_secrets: "yes"
 destination_path: "/home"
 #driver_path:
 #  csi-unity: "/root/csi-unity"
