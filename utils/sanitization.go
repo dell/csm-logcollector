@@ -87,7 +87,7 @@ func GetSecretFilePath() []string {
 
 // GetSecretOpted - This method will read the config file to check if getting secrets opted.
 func GetSecretOpted() bool {
-	var use_secrets bool
+	var useSecrets bool
 	_, err := os.Stat("config.yml")
 	if err == nil {
 		yamlFile, err := ioutil.ReadFile("config.yml")
@@ -117,13 +117,13 @@ func GetSecretOpted() bool {
 				if len(strings.TrimSpace(value)) != 0 {
 					// secret.yml file relative path is same for unity, powerscale, powerstore and powermax drivers
 					if key == "use_secrets" {
-						use_secrets = true
+						useSecrets = true
 					}
 				}
 			}
 		}
 	}
-	return use_secrets
+	return useSecrets
 }
 
 // ReadSecretFileContent reads the content of secret.yaml
@@ -330,15 +330,15 @@ func GetSecrets(clientset kubernetes.Interface, namespace string) []string {
 	for _, secret := range secretsList.Items {
 		//strData := secret.String()
 		if secret.Type != "" {
-			secret_name := secret.Name
-			secret_user := secret.Labels["username"]
-			raw_secret_password := secret.Labels["password"]
-			secret_password, err := base64.StdEncoding.DecodeString(string(raw_secret_password))
+			secretName := secret.Name
+			secretUser := secret.Labels["username"]
+			rawSecretPassword := secret.Labels["password"]
+			secretPassword, err := base64.StdEncoding.DecodeString(string(rawSecretPassword))
 			if err != nil {
 				sanityLog.Fatalf("Failed to decode the secret password with error: %s", err)
 			}
-			fmt.Printf("\nGot Secrets for Secret Name: %s", secret_name)
-			secretKeys = append(secretKeys, secret_user, string(secret_password))
+			fmt.Printf("\nGot Secrets for Secret Name: %s", secretName)
+			secretKeys = append(secretKeys, secretUser, string(secretPassword))
 		}
 
 	}
