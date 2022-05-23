@@ -26,25 +26,19 @@ Currently, the logs of CSI drivers can only be collected.
 ## Support
 Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by creating a [GitHub Issue](https://github.com/dell/csm-logcollector/issues) for any CSM log collector issues, questions or feedback.
 
-## Prerequisites
-  
-  * go 1.17.2
-  
 ## Installing application via docker image
  
   1. To install through docker image, please follow the below mentioned steps.
-
+     
      **Note**:As a prerequisite docker should be installed & running.
 
-    docker pull dellemc/csm-log-collector
+    docker pull quay.io/arindam_datta/csm-logcollector
 
   2. Run the docker image.
         
-    docker run -it dellemc/csm-log-collector 
+    docker run -it quay.io/arindam_datta/csm-logcollector    
     
-  3. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector), one configuration file(config.yml) and a readme file.
-
-    cd /root/csm-logcollector
+  3. Browse through the docker image and navigate to the folder '/root/csm-logcollector'. Folder contains one binary file(csm-logcollector) and one configuration file(config.yml).
   
   4. config.yml file must be updated with the required details as explained in the [configuration](#Configuration) section.
   
@@ -57,6 +51,13 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
     exit
 
 ## Installing application via GitHub
+
+---
+**NOTE**
+
+Please make sure to use the latest go version(1.17.x).
+
+---
 
   1. Alternatively, Clone the repo using the command:
 
@@ -76,11 +77,11 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
   1. Download the docker image on a system that has internet access. 
 
-    docker pull dellemc/csm-log-collector
+    docker pull quay.io/arindam_datta/csm-logcollector
 
   2. Save the Docker image as a tar file
   
-    docker save -o <tar-filename>.tar dellemc/csm-log-collector
+    docker save -o <tar-filename>.tar quay.io/arindam_datta/csm-logcollector
 
   3. Copy the image to other system with regular file transfer tools such as cp, scp, etc.
   
@@ -91,8 +92,8 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
   4. Load the image into Docker:
 
     docker load -i <path-for-tar-file>/<tar-filename>.tar
-
-  5. Then follow the same steps from step 2 onwards as mentioned [here](#installing-application-via-docker-image) for execution.
+  
+  4. Then follow the same steps from step 2 onwards as mentioned [here](#installing-application-via-docker-image) for execution.
   
 ## Configuration
   1. The config.yml contains generic configuration which are necessary to execute the application.
@@ -108,7 +109,10 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
   3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter. If not given then the tarball will be generated at the root location of the tool.
 
-  4. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field and required only if log sanitization is to be performed. Any sensitive data like credentials, ip, fqdn etc. present in the files pointing to below mentioned paths will be masked. It includes following sub-fields.
+  4. <b>secrets</b>: Secret section will describe whether or kubernetes secrets is to be sanitised or masked in the collected logs.This is optional field.It includes following sub-fields.
+      * use_secrets: Perform sanitisation against all the kubernetes secrets under a specific namespace.
+      
+  5. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field and required only if log sanitization is to be performed. Any sensitive data like credentials, ip, fqdn etc. present in the files pointing to below mentioned paths will be masked. It includes following sub-fields.
       * csi-unity: CSI driver path for Unity.
       * csi-powerstore: CSI driver path for PowerStore.
       * csi-powerscale: CSI driver path for PowerScale.
@@ -117,7 +121,7 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
 ## Using Application
   * To run the application in the container, navigate to the '/root/csm-logcollector' folder and run the following command:
-
+    
         ./csm-logcollector
 
   * If the repo is cloned from the source, run the following command:
