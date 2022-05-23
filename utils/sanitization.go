@@ -115,7 +115,6 @@ func GetSecretOpted() bool {
 					sanityLog.Fatalf("key/value is not string!")
 				}
 				if len(strings.TrimSpace(value)) != 0 {
-					// secret.yml file relative path is same for unity, powerscale, powerstore and powermax drivers
 					if key == "use_secrets" {
 						useSecrets = true
 					}
