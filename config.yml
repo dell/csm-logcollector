@@ -3,9 +3,9 @@ kubeconfig_details:
   ip_address: "10.xxx.xx.xx"
   username: "root"
   password: "xxxxxxxx"
-secrets:
-  use_secrets: "yes"
 destination_path: "/home"
+#secrets:
+#  use_secrets: "yes"
 #driver_path:
 #  csi-unity: "/root/csi-unity"
 #  csi-powerstore: "/root/csi-powerstore"
