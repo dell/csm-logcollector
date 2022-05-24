@@ -7,7 +7,7 @@ kubeconfig_details:
   password: "sample_password"
 destination_path: "/root/"
 secrets:
-  use_secrets: "yes"
+  use_secrets: "true"
 driver_path:
   csi-unity: "/root/csi-unity"
   csi-powerstore: "/root/csi-powerstore"

@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -116,7 +117,7 @@ func GetSecretOpted() bool {
 				}
 				if len(strings.TrimSpace(value)) != 0 {
 					if key == "use_secrets" {
-						useSecrets = true
+						useSecrets, _ = strconv.ParseBool(string(value))
 					}
 				}
 			}
@@ -349,8 +350,8 @@ func PerformSanitization(clientset kubernetes.Interface, namespace string, names
 	var secretFilePaths []string
 	var sensitiveContentList []string
 	var maskingFlag = false
-	if GetSecretOpted() == true {
-		fmt.Print("\nGet Secrets Opted for sanitisation\n")
+	if GetSecretOpted() {
+		fmt.Print("\nGet Secrets opted for sanitisation\n")
 		sensitiveContentList = GetSecrets(clientset, namespace)
 	} else {
 		fmt.Print("\nGet Secrets not opted for sanitisation\n")

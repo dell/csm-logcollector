@@ -5,7 +5,7 @@ kubeconfig_details:
   password: "xxxxxxxx"
 destination_path: "/home"
 #secrets:
-#  use_secrets: "yes"
+#  use_secrets: "false"
 #driver_path:
 #  csi-unity: "/root/csi-unity"
 #  csi-powerstore: "/root/csi-powerstore"
