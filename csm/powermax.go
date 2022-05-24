@@ -184,7 +184,7 @@ func (p PowerMaxStruct) GetLogs(namespace string, optionalFlag string, noOfDays 
 	}
 
 	// Perform sanitization
-	ok := utils.PerformSanitization(namespaceDirectoryName)
+	ok := utils.PerformSanitization(clientset, namespace, namespaceDirectoryName)
 	if !ok {
 		pmaxLog.Warnf("Sanitization not performed for %s driver.", namespace)
 	}

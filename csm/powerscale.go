@@ -83,7 +83,7 @@ func (p PowerScaleStruct) GetLogs(namespace string, optionalFlag string, noOfDay
 	}
 
 	// Perform sanitization
-	ok := utils.PerformSanitization(namespaceDirectoryName)
+	ok := utils.PerformSanitization(clientset, namespace, namespaceDirectoryName)
 	if !ok {
 		pscLog.Warnf("Sanitization not performed for %s driver.", namespace)
 	}

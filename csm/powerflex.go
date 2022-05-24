@@ -178,7 +178,7 @@ func (p PowerFlexStruct) GetLogs(namespace string, optionalFlag string, noOfDays
 	}
 
 	// Perform sanitization
-	ok := utils.PerformSanitization(namespaceDirectoryName)
+	ok := utils.PerformSanitization(clientset, namespace, namespaceDirectoryName)
 	if !ok {
 		pflxLog.Warnf("Sanitization not performed for %s driver.", namespace)
 	}

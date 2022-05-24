@@ -46,6 +46,32 @@ func TestGetSecretFilePath(t *testing.T) {
 	}
 }
 
+func TestGetSecretOpted(t *testing.T) {
+	_, err := os.Stat("config.yml")
+	if err != nil {
+		fmt.Println(err)
+	}
+	type tests = []struct {
+		description      string
+		isGetSecretOpted bool
+	}
+
+	var getSecretOptedTest = tests{
+		{"If get secret opted",
+			true},
+	}
+
+	for _, test := range getSecretOptedTest {
+		t.Run(test.description, func(t *testing.T) {
+			actual := GetSecretOpted()
+			if diff := cmp.Diff(actual, test.isGetSecretOpted); diff != "" {
+				t.Errorf("%T differ (-got, +want): %s", test.isGetSecretOpted, diff)
+				return
+			}
+		})
+	}
+}
+
 func TestPowerstoreSecretContent(t *testing.T) {
 	filePath := "test_data/powerstore_secret_data.yaml"
 	_, err := os.Stat(filePath)

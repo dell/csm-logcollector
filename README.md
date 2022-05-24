@@ -108,7 +108,10 @@ Please interact with us on [GitHub](https://github.com/dell/csm-logcollector) by
 
   3. <b>destination_path</b>: Destination path where tarball is to be copied. It is an optional parameter. If not given then the tarball will be generated at the root location of the tool.
 
-  4. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field and required only if log sanitization is to be performed. Any sensitive data like credentials, ip, fqdn etc. present in the files pointing to below mentioned paths will be masked. It includes following sub-fields.
+  4. <b>secrets</b>: This will allow the user to configure whether or not the kubernetes secrets will be sanitised or masked in the collected logs.This is an optional field.It includes following sub-fields.
+      * use_secrets: Perform sanitisation against all the kubernetes secrets under a specific namespace.
+  
+  5. <b>driver_path</b>: Path where CSI driver is installed in the Kubernetes cluster for the respective storage platform. This is optional field and required only if log sanitization is to be performed. Any sensitive data like credentials, ip, fqdn etc. present in the files pointing to below mentioned paths will be masked. It includes following sub-fields.
       * csi-unity: CSI driver path for Unity.
       * csi-powerstore: CSI driver path for PowerStore.
       * csi-powerscale: CSI driver path for PowerScale.
