@@ -328,11 +328,19 @@ func GetSecrets(clientset kubernetes.Interface, namespace string) []string {
 		sanityLog.Fatalf("sanitization against sensitive contents failed with error: %s", err)
 	}
 	for _, secret := range secretsList.Items {
-		//strData := secret.String()
 		if secret.Type != "" {
+			var secretUser, rawSecretPassword string
 			secretName := secret.Name
-			secretUser := secret.Labels["username"]
-			rawSecretPassword := secret.Labels["password"]
+
+			for k := range secret.Labels {
+				if k == "username" {
+					secretUser = secret.Labels["username"]
+				}
+				if k == "password" {
+					rawSecretPassword = secret.Labels["password"]
+				}
+			}
+
 			secretPassword, err := base64.StdEncoding.DecodeString(string(rawSecretPassword))
 			if err != nil {
 				sanityLog.Fatalf("Failed to decode the secret password with error: %s", err)
