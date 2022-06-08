@@ -1,19 +1,20 @@
 # CODEOWNERS
-#
+
 # documentation for this file can be found at:
 # https://help.github.com/en/articles/about-code-owners
 
 # These are the default owners for the code and will
 # be requested for review when someone opens a pull request.
 # order is alphabetical for easier maintenance.
-#
-# Akash Shendge (shenda1)
+
 # Arindam Datta (dattaarindam)
+# Deepak Ghivari (Deepak-Ghivari)
 # Prabhulinga Revur (prabhu-dell)
+# PrasannaM (Prablr79)
 # Rajshree Khare (khareRajshree)
 # Srinivas P Rao (srinivas-rao5)
-# PrasannaM (Prablr79)
+# Vamsikrishna Siddu (VamsiSiddu-7)
 
 
 # for all files:
-* @dattaarindam @prabhu-dell @khareRajshree @srinivas-rao5 @prablr79
+* @dattaarindam @Deepak-Ghivari @khareRajshree @prabhu-dell @prablr79 @srinivas-rao5 @VamsiSiddu-7
