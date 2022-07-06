@@ -17,14 +17,22 @@ import (
 	"csm-logcollector/csm"
 	utils "csm-logcollector/utils"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
 
 var logger, _ = utils.GetLogger()
 var version = "development"
+var isTesting = false
 
 func main() {
+	argLength := len(os.Args[1:])
+
+	if argLength == 2 {
+		isTesting = true
+	}
+
 	logger.Info("Log started for csm-logcollector")
 	fmt.Printf("\n\n\tCSM Log Collector, version: %s\n", version)
 	fmt.Println("\t=================================")
@@ -40,7 +48,11 @@ func main() {
 	const consentMsg string = "As a part of log collection, logs will be sent for further analysis. Please provide your consent.(Y/y)"
 
 	fmt.Println(consentMsg)
-	ipCount, err = fmt.Scanln(&consent)
+	if isTesting {
+		consent = "y" // will be assiged from cmdline
+	} else {
+		ipCount, err = fmt.Scanln(&consent)
+	}
 	if (err != nil || consent != "Y" && consent != "y") || ipCount == 0 {
 		fmt.Println("\nExiting the application as the user consent is not granted or invalid input")
 		logger.Fatalf("Exiting the application as consent is not provided or invalid input.")
@@ -50,15 +62,23 @@ func main() {
 	fmt.Println("Please select the respective storage array for which CSI Driver logs need to be collected:")
 	fmt.Println("1: PowerScale/Isilon\n2: Unity\n3: PowerStore\n4: PowerMax\n5: PowerFlex/VxFlexOS")
 	fmt.Println("\nPlease enter your choice (e.g. enter '1' for PowerScale) :")
-	ipCount, err = fmt.Scanln(&driveOption)
+	if isTesting {
+		driveOption = "5" // will be assiged from cmdline
+	} else {
+		ipCount, _ = fmt.Scanln(&driveOption)
+	}
 	driveChoice, err := strconv.Atoi(driveOption)
 	if err != nil || driveChoice < 1 || driveChoice > 5 || ipCount <= 0 {
 		fmt.Println("Invalid choice, please enter correct choice")
 		logger.Fatalf("Entering CSI Driver choice failed")
 	}
-
 	fmt.Println("\nEnter the namespace: ")
-	_, errns := fmt.Scanln(&namespace)
+	var errns error
+	if isTesting {
+		namespace = "vxflexos" // will be assiged from cmdline
+	} else {
+		_, errns = fmt.Scanln(&namespace)
+	}
 	if errns != nil {
 		fmt.Printf("\nEntering namespace failed with error %s \n", errns.Error())
 		logger.Fatalf("Entering namespace failed with error: %s", errns.Error())
@@ -116,7 +136,11 @@ func main() {
 
 	for count > 0 {
 		fmt.Println("\nOptional log will be collected only when True/true is entered. Supported values are True/true/False/false.")
-		ipCount, err = fmt.Scanln(&optionalFlag)
+		if isTesting {
+			optionalFlag = "true" // will be assiged from cmdline
+		} else {
+			ipCount, err = fmt.Scanln(&optionalFlag)
+		}
 		if err != nil || ipCount <= 0 {
 			fmt.Printf("Invalid input or failed to get user input. Please retry !!")
 			if count <= 0 {
@@ -137,7 +161,13 @@ func main() {
 
 	if optionalFlag == "True" || optionalFlag == "true" {
 		fmt.Println("Enter the number of days the logs need to be collected from today (to skip this filter enter 0) :")
-		ipCount, inputErr := fmt.Scanln(&daysUserInput)
+		var ipCount int
+		var inputErr error
+		if isTesting {
+			daysUserInput = "5" // will be assiged from cmdline
+		} else {
+			ipCount, inputErr = fmt.Scanln(&daysUserInput)
+		}
 		noOfDays, intErr = strconv.Atoi(daysUserInput)
 		if inputErr != nil || intErr != nil || noOfDays < 0 || noOfDays > 180 || ipCount <= 0 {
 			fmt.Println("Invalid number of days, please enter between 1 to 180.")
