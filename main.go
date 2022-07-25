@@ -197,8 +197,13 @@ func main() {
 			logger.Fatalf("Invalid choice, exiting Application")
 		}
 	}
+	configFilePath := ""
 
-	p.GetLogs(temp, optionalFlag, noOfDays, driveChoice)
+	if isTesting {
+		configFilePath = os.Args[1] // will be assiged from cmdline
+	}
+
+	p.GetLogs(temp, optionalFlag, noOfDays, driveChoice, configFilePath)
 }
 
 // CheckNamespace verifies if given namespace exists

@@ -271,7 +271,7 @@ func (s StorageNameSpaceStruct) GetLeaseDetails() string {
 }
 
 // GetLogs accesses the API to get driver/sidecarpod logs of RUNNING pods
-func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string, daysCount int) {
+func (s StorageNameSpaceStruct) GetLogs(namespace string, optionalFlag string, daysCount int, driverStorageSystem int, configFilePath string) {
 }
 
 func createDirectory(name string) (dirName string) {
